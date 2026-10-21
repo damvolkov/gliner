@@ -12,6 +12,7 @@ nav = [
   { "API" = "api.md" },
   { "Configuration" = "configuration.md" },
   { "Model" = "model.md" },
+  { "Training" = "train.md" },
   { "Development" = "development.md" },
 ]
 

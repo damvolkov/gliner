@@ -10,11 +10,11 @@ You edit files; the workflow commits. Anything you change outside the allowlist 
 |---|---|
 | `src/schema/` | Wire types and error enums: no logic, imports nothing else from the crate |
 | `src/config/` | Configuration sections (serde) |
-| `src/core/` | Pure logic: words splitter, windows, span decoding, label cache, tensors, settings, the `Recognizer` port |
-| `src/runtime/` | The artifact contract (`artifact.rs`), the ONNX Runtime backend (`onnx.rs`), the bounded executor |
-| `src/api/` | axum handlers, the NDJSON batch stream, the server lifecycle |
-| `tests/api/`, `tests/server/` | Integration tests (fake recognizer, real TCP lifecycle) |
-| `tests/model/` | Model-backed parity and bench, ignored in CI |
+| `src/core/` | Pure logic: words splitter, windows, span decoding, label cache, tensors, settings, the `Recognizer` port; eval scorer, bootstrap, gate, example lines |
+| `src/runtime/` | The artifact contract (`artifact.rs`), the ONNX Runtime backend (`onnx.rs`), the bounded executor; the model registry, data store, toolchain, train lab, job board and job |
+| `src/api/` | axum handlers, the NDJSON batch stream, the server lifecycle, the train-role routes |
+| `tests/api/`, `tests/server/` | Integration tests (fake recognizer, fake toolchain, real TCP lifecycle) |
+| `tests/model/` | Model-backed parity, bench and train smoke, ignored in CI |
 | `tests/resources/` | Fixtures (tiny ONNX artifact, PyTorch parity) — regenerated with `make tiny` / `make fixture`, never by hand |
 
 Layers point inward: `schema ← config ← core ← runtime ← api` (`make bounds` enforces it).

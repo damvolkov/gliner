@@ -1,6 +1,7 @@
 # API
 
-Every error is `{"error": "<message>"}` with its status. Prediction routes answer `503` while the model loads.
+Every error is `{"error": "<message>"}` with its status. Prediction routes answer `503` while the model loads. The
+train routes ([below](#train-role)) answer `501` unless `train.enabled`.
 
 ## `POST /ner`
 
@@ -81,8 +82,27 @@ A bad line never ends the stream. Flow control:
 ## `GET /models`
 
 ```json
-{"model": "knowledgator/gliner-bi-base-v2.0", "version": "0f6a855ea590f2ba", "labels_cached": 8}
+{"model": "knowledgator/gliner-bi-base-v2.0", "version": "0f6a855ea590f2ba", "labels_cached": 8, "served": 1}
 ```
 
 `version` is the first 16 hex digits of the sha256 of the artifact files' sha256s: it changes with any byte of the
-model, and with nothing else.
+model, and with nothing else. `served` is the registry version answering (`current`).
+
+## Train role
+
+The flow, the registry and the gate: [Training](train.md).
+
+| Route | Body → reply | Errors |
+|---|---|---|
+| `PUT /datasets/{name}` | NDJSON `{text, entities: [{start, end, label}]}` per line → `{name, lines, sha256}` | `422` bad name (1–64 of `A-Z a-z 0-9 . _ -`), bad or overlong line (`line N: …`), no examples |
+| `PUT /evals/{name}` | the same, into the eval sets | the same |
+| `GET /datasets`, `GET /evals` | → `[{name, lines, sha256}]` by name | |
+| `POST /eval` | `{set, version?}` → `{set, version, texts, strict, lenient, labels: {label: score}}`, each score `{precision, recall, f1, tp, fp, fn}` | `404` set or version, `422` a set without labels |
+| `POST /promote` | `{version}` → the new `/models` card | `404` version, `500` it does not load (the champion keeps serving) |
+| `POST /train` | `{dataset, base?, params?: {epochs, lr, batch}, auto_promote?}` → `202` the job | `404` dataset or base, `422` params, `409` a job is running |
+| `GET /train` | → every job of this process | |
+| `GET /train/{id}` | → `{id, state, step, dataset, base, params, auto_promote, version, promoted, error, report, log, created, finished}` | `404` |
+| `DELETE /train/{id}` | cancels; answers once stopped → the job, `state: "cancelled"` | `404`, `409` not running |
+
+`state` is `running`, `succeeded`, `failed` or `cancelled`; `step` is `leakage`, `train`, `export`, `parity`,
+`regression`, `gate`, `register` or `promote`; `log` keeps the last 200 lines.

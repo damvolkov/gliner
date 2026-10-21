@@ -2,7 +2,8 @@
 
 ## The artifact contract
 
-The service loads a directory, never a hub id, and downloads nothing:
+The service loads a directory, never a hub id, and downloads nothing; `model.dir` is a registry of such
+directories, one per version ([Training](train.md#the-model-registry)), `current` naming the one served:
 
 | File | |
 |---|---|
@@ -18,11 +19,14 @@ At load every file is hashed against the manifest; a mismatch refuses to serve.
 ## Export
 
 ```bash
-make export MODEL=knowledgator/gliner-bi-base-v2.0     # → data/models/gliner-bi-base-v2.0
+make export MODEL=knowledgator/gliner-bi-base-v2.0     # → data/models/gliner-bi-base-v2.0/1, current = 1
 ```
 
-`tools/export` is a uv project (PyTorch CPU, gliner 0.2.29) — the only Python here, because exporting from PyTorch
-has no Rust path. It works around two bugs of gliner 0.2.29's `export_to_onnx(from_labels_embeddings=True)`: the
+It refuses to overwrite an existing version 1. A trained version is exported by the train job from its local
+checkpoint (`export.py <checkpoint dir> --name <lineage id>`).
+
+`tools/export` is a uv project (PyTorch CPU, gliner 0.2.29) — with `tools/train`, the only Python here, because
+exporting from and training in PyTorch have no Rust path. It works around two bugs of gliner 0.2.29's `export_to_onnx(from_labels_embeddings=True)`: the
 flag reaches `_build_dummy_batch` (TypeError), and the wrapper names the embeddings input `labels_embeddings` where
 the core expects `labels_embeds`. The label tower is exported separately and checked against `encode_labels`
 (max gap ≈ 2e-7) before the manifest is written.

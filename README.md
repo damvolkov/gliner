@@ -34,7 +34,7 @@ text ─▶ words ─▶ windows (max_len, overlap) ─▶ text.onnx ◀─ labe
 
 ```bash
 make install                                             # pinned Rust, uv, prek, cargo-llvm-cov, cargo-about, hooks
-make export MODEL=knowledgator/gliner-bi-base-v2.0       # PyTorch → data/models/gliner-bi-base-v2.0 (ONNX artifact)
+make export MODEL=knowledgator/gliner-bi-base-v2.0       # PyTorch → data/models/gliner-bi-base-v2.0/1 (ONNX artifact), served
 make serve                                               # :5800
 curl -s localhost:5800/ner -H 'content-type: application/json' \
   -d '{"text": "José Saramago vivió en Lanzarote.", "labels": ["person", "location"]}'
@@ -45,7 +45,23 @@ curl -s localhost:5800/ner -H 'content-type: application/json' \
              {"start":23,"end":32,"text":"Lanzarote","label":"location","score":0.74}]}
 ```
 
-Docker: `make image && make up` (the artifact dir is mounted read-only at `/models`; nothing is downloaded at run time).
+Docker: `make image && make up` (the model registry is mounted read-only at `/models`; nothing is downloaded at run
+time).
+
+## Training
+
+The same binary in a second image, `gliner-train` (`make image-train`, PyTorch CPU or `TORCH=cu128`), with
+`train.enabled`: upload datasets and private eval sets as NDJSON, `POST /train`, and the job does the rest — leakage
+check, fine-tuning, export, parity with PyTorch (≥ 99 % identical predictions), regression against the served model on
+every eval set with paired-bootstrap intervals, a gate, registration as a new version, and a hot swap if asked and
+earned. Without the role, those routes answer 501. Flow, registry and gate: [docs/train.md](docs/train.md).
+
+```bash
+curl -s -X PUT localhost:5800/evals/support --data-binary @support.eval.jsonl
+curl -s -X PUT localhost:5800/datasets/support --data-binary @support.train.jsonl
+curl -s localhost:5800/train -H 'content-type: application/json' -d '{"dataset": "support", "auto_promote": true}'
+curl -s localhost:5800/train/1        # state, step, log tail, report, version
+```
 
 ## API
 
@@ -55,10 +71,15 @@ Docker: `make image && make up` (the artifact dir is mounted read-only at `/mode
 | `POST /ner/batch` | NDJSON in, NDJSON out, streamed: `{id, text, labels?, threshold?}` per line → `{id, entities}` or `{id, error}` as each completes |
 | `GET /health` | liveness and version; answers while the model loads |
 | `GET /ready` | 200 once the model is loaded, 503 before |
-| `GET /models` | `{model, version, labels_cached}`; `version` hashes the model files |
+| `GET /models` | `{model, version, labels_cached, served}`; `version` hashes the model files, `served` is the registry version |
+| `PUT /datasets/{name}`, `PUT /evals/{name}` | NDJSON `{text, entities: [{start, end, label}]}`, checked line by line, stored atomically → `{name, lines, sha256}` (train role) |
+| `GET /datasets`, `GET /evals` | the stored sets (train role) |
+| `POST /eval` | `{set, version?}` → strict, lenient and per-label P/R/F1 (train role) |
+| `POST /train`, `GET /train[/{id}]`, `DELETE /train/{id}` | a train job: start (202), follow, cancel (train role) |
+| `POST /promote` | `{version}`: hot swap to a registered version; the champion keeps serving if it fails to load (train role) |
 
 Details, errors and the batch protocol: [docs/api.md](docs/api.md). Configuration: [docs/configuration.md](docs/configuration.md).
-The artifact contract and the export: [docs/model.md](docs/model.md). Development, gates and workflows:
+The artifact contract and the export: [docs/model.md](docs/model.md). Training: [docs/train.md](docs/train.md). Development, gates and workflows:
 [docs/development.md](docs/development.md).
 
 ## License
