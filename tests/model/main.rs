@@ -17,6 +17,7 @@ use std::path::PathBuf;
 use gliner::core::settings::Settings;
 use gliner::runtime::artifact::ModelArtifact;
 use gliner::runtime::onnx::OnnxRuntime;
+use gliner::runtime::registry::ModelRegistry;
 use gliner::schema::entity::Entity;
 use serde::Deserialize;
 
@@ -44,9 +45,15 @@ pub fn fixture() -> Fixture {
     serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap()
 }
 
-/// The exported model the settings point at (`GLINER_MODEL__DIR`, `GLINER_MODEL__THREADS`, …), loaded.
-pub fn runtime() -> OnnxRuntime {
+/// The registry the settings point at (`GLINER_MODEL__DIR`; `make export` writes version 1).
+pub fn registry() -> ModelRegistry {
     let settings = Settings::load(None).unwrap();
-    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(&settings.model.dir);
+    ModelRegistry::open(&PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(&settings.model.dir)).unwrap()
+}
+
+/// The registry's served version, loaded with the settings (`GLINER_MODEL__THREADS`, …).
+pub fn runtime() -> OnnxRuntime {
+    let (settings, registry) = (Settings::load(None).unwrap(), registry());
+    let dir = registry.path(registry.current().unwrap());
     OnnxRuntime::load(&ModelArtifact::open(&dir).unwrap(), &settings.model).unwrap()
 }

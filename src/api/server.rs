@@ -18,10 +18,13 @@ use crate::core::settings::Settings;
 use crate::runtime::artifact::{ArtifactError, ModelArtifact};
 use crate::runtime::executor::BoundedExecutor;
 use crate::runtime::onnx::{OnnxError, OnnxRuntime};
+use crate::runtime::registry::{ModelRegistry, RegistryError};
 use crate::schema::error::RequestError;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ServerError {
+    #[error(transparent)]
+    Registry(#[from] RegistryError),
     #[error(transparent)]
     Artifact(#[from] ArtifactError),
     #[error(transparent)]
@@ -34,7 +37,8 @@ pub enum ServerError {
     Io(#[from] std::io::Error),
 }
 
-/// The HTTP server: listening as soon as the artifact checks out, ready once the model is loaded; SIGINT/SIGTERM
+/// The HTTP server: listening as soon as the served version's artifact checks out (`model.dir` is the model
+/// registry, its `current` the version served), ready once the model is loaded; SIGINT/SIGTERM
 /// (or a failed load) stop new work and end open batch streams after their items in flight.
 #[derive(Debug)]
 pub struct HttpServer;
@@ -98,13 +102,16 @@ impl HttpServer {
     }
 
     /// # Errors
-    /// Invalid artifact or defaults, an address that cannot be bound, or a model that fails to load.
+    /// No registry or current version, invalid artifact or defaults, an address that cannot be bound, or a model
+    /// that fails to load.
     pub async fn serve(settings: &Settings) -> Result<(), ServerError> {
-        let artifact = ModelArtifact::open(&settings.model.dir)?;
+        let registry = ModelRegistry::open(&settings.model.dir)?;
+        let version = registry.current()?;
+        let artifact = ModelArtifact::open(&registry.path(version))?;
         let state = AppState::new(settings)?;
         let address = SocketAddr::new(settings.server.host, settings.server.port);
         let listener = TcpListener::bind(address).await?;
-        tracing::info!(%address, model = %artifact.manifest.model, "server.listening");
+        tracing::info!(%address, model = %artifact.manifest.model, version, "server.listening");
         let app = axum::serve(listener, Self::router(state.clone()))
             .with_graceful_shutdown(Self::serve_signal(state.shutdown.clone()))
             .into_future();

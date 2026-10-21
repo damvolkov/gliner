@@ -34,8 +34,10 @@ tools:  ## prek, cargo-llvm-cov and cargo-about, then the git hooks
 hooks:  ## run every prek hook on every file (what CI runs)
 	@uvx prek==$(PREK_VERSION) run --all-files --show-diff-on-failure
 
-export:  ## export a GLiNER bi-encoder to the served artifact: make export MODEL=knowledgator/gliner-bi-base-v2.0 → data/models/<name>
-	@$(EXPORT) tools/export/export.py $(MODEL) --out $(MODELS)/$(NAME)
+export:  ## export a GLiNER bi-encoder as version 1 of a new registry: make export MODEL=… → data/models/<name>/1, current = 1
+	@test ! -e $(MODELS)/$(NAME)/1 || { echo "$(MODELS)/$(NAME) already holds version 1"; exit 1; }
+	@$(EXPORT) tools/export/export.py $(MODEL) --out $(MODELS)/$(NAME)/1
+	@printf '1\n' > $(MODELS)/$(NAME)/current
 
 fixture:  ## PyTorch predictions over the parity texts → tests/resources/parity/torch.json [MODEL=…]
 	@$(EXPORT) tools/export/parity.py $(MODEL) --texts tests/resources/parity/texts.json --out tests/resources/parity/torch.json
@@ -91,7 +93,7 @@ check: lint bounds gates test  ## the local gate
 image:  ## build the runtime image → $(IMAGE)
 	@docker build -f docker/Dockerfile -t $(IMAGE) .
 
-up:  ## run the image on :$(PORT) with data/models/<name> mounted read-only [MODEL=…]
+up:  ## run the image on :$(PORT) with the registry data/models/<name> mounted read-only [MODEL=…]
 	@docker run -d --rm --name gliner -p $(PORT):5800 -v $(CURDIR)/$(MODELS)/$(NAME):/models:ro $(IMAGE)
 
 down:  ## stop the container

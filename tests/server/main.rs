@@ -6,11 +6,27 @@ use std::time::Duration;
 use gliner::api::server::{HttpServer, ServerError};
 use gliner::core::settings::Settings;
 use gliner::runtime::onnx::OnnxError;
+use gliner::runtime::registry::RegistryError;
 use serde_json::{Value, json};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 
-async fn settings(overlap: usize) -> Settings {
+/// A model registry holding the tiny artifact as version 1, served.
+fn registry() -> tempfile::TempDir {
+    let root = tempfile::tempdir().unwrap();
+    let tiny = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/resources/tiny");
+    std::fs::create_dir(root.path().join("1")).unwrap();
+    std::fs::read_dir(tiny)
+        .unwrap()
+        .map(|entry| entry.unwrap().path())
+        .for_each(|path| {
+            std::fs::copy(&path, root.path().join("1").join(path.file_name().unwrap())).unwrap();
+        });
+    std::fs::write(root.path().join("current"), "1\n").unwrap();
+    root
+}
+
+async fn settings(registry: &Path, overlap: usize) -> Settings {
     let mut settings = Settings::default();
     settings.server.host = [127, 0, 0, 1].into();
     settings.server.port = TcpListener::bind("127.0.0.1:0")
@@ -19,7 +35,7 @@ async fn settings(overlap: usize) -> Settings {
         .local_addr()
         .unwrap()
         .port();
-    settings.model.dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/resources/tiny");
+    settings.model.dir = registry.to_owned();
     settings.model.threads = Some(1);
     settings.model.overlap = overlap;
     settings
@@ -42,7 +58,8 @@ async fn http(port: u16, method: &str, path: &str, body: &str) -> Option<(u16, V
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn test_serve_loads_answers_and_stops_on_sigterm() {
-    let settings = settings(2).await;
+    let registry = registry();
+    let settings = settings(registry.path(), 2).await;
     let port = settings.server.port;
     let server = tokio::spawn(async move { HttpServer::serve(&settings).await });
     let ready = async {
@@ -71,7 +88,8 @@ async fn test_serve_loads_answers_and_stops_on_sigterm() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn test_serve_fails_when_the_model_cannot_load() {
-    let settings = settings(64).await;
+    let registry = registry();
+    let settings = settings(registry.path(), 64).await;
     let failed = tokio::time::timeout(Duration::from_secs(10), HttpServer::serve(&settings))
         .await
         .unwrap();
@@ -83,6 +101,17 @@ async fn test_serve_fails_when_the_model_cannot_load() {
     missing.model.dir = "/nonexistent".into();
     assert!(matches!(
         HttpServer::serve(&missing).await,
+        Err(ServerError::Registry(RegistryError::Missing(_)))
+    ));
+    std::fs::write(registry.path().join("current"), "2\n").unwrap();
+    assert!(matches!(
+        HttpServer::serve(&settings).await,
+        Err(ServerError::Registry(RegistryError::Unknown(2)))
+    ));
+    std::fs::write(registry.path().join("current"), "1\n").unwrap();
+    std::fs::remove_file(registry.path().join("1/labels.onnx")).unwrap();
+    assert!(matches!(
+        HttpServer::serve(&settings).await,
         Err(ServerError::Artifact(_))
     ));
 }
