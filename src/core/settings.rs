@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::config::model::ModelConfig;
 use crate::config::server::ServerConfig;
+use crate::config::train::TrainConfig;
 use crate::core::query::Query;
 
 pub const DEFAULT_PATH: &str = "gliner.toml";
@@ -20,20 +21,21 @@ pub enum SettingsError {
 }
 
 /// The service contract: serde defaults, then `gliner.toml`, then `GLINER_<SECTION>__<KEY>` overrides
-/// (e.g. `GLINER_MODEL__THREADS=8`). Every table rejects unknown keys; values are then range-checked, so a
-/// configuration that cannot run never starts.
+/// (e.g. `GLINER_MODEL__THREADS=8`; a list as `GLINER_TRAIN__TRAINER='["python", "train.py"]'`). Every table
+/// rejects unknown keys; values are then range-checked, so a configuration that cannot run never starts.
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct Settings {
     pub server: ServerConfig,
     pub model: ModelConfig,
+    pub train: TrainConfig,
 }
 
 impl Settings {
     // ##### PRIVATE #####
 
-    fn validate_rules(&self) -> [(bool, &'static str, &'static str); 7] {
-        let model = &self.model;
+    fn validate_rules(&self) -> [(bool, &'static str, &'static str); 11] {
+        let (model, train) = (&self.model, &self.train);
         [
             (self.server.line >= 1024, "server.line", "must be at least 1024 bytes"),
             (model.concurrency >= 1, "model.concurrency", "must be at least 1"),
@@ -54,6 +56,14 @@ impl Settings {
                 "model.window",
                 "must be at least 1 and larger than model.overlap",
             ),
+            (
+                train.parity > 0.0 && train.parity <= 1.0,
+                "train.parity",
+                "must be in (0, 1]",
+            ),
+            (!train.trainer.is_empty(), "train.trainer", "must name a program"),
+            (!train.exporter.is_empty(), "train.exporter", "must name a program"),
+            (!train.reference.is_empty(), "train.reference", "must name a program"),
         ]
     }
 
@@ -156,6 +166,27 @@ mod tests {
         assert_eq!(invalid("[model]\nlabels = [\"person\", \"\"]\n"), Some("model.labels"));
         assert_eq!(invalid("[model]\nwindow = 32\noverlap = 32\n"), Some("model.window"));
         assert_eq!(invalid("[model]\nwindow = 64\noverlap = 32\n"), None);
+    }
+
+    #[test]
+    fn test_load_train_section_and_rules() {
+        Jail::expect_with(|jail| {
+            jail.create_file(
+                "gliner.toml",
+                "[train]\nenabled = true\nparity = 0.95\n[train.gate]\nfloor = -2.0\n",
+            )?;
+            jail.set_env("GLINER_TRAIN__TRAINER", "[\"python\", \"train.py\"]");
+            let settings = Settings::load(None).unwrap();
+            assert!(settings.train.enabled);
+            assert_eq!(settings.train.trainer, ["python", "train.py"]);
+            assert!((settings.train.parity - 0.95).abs() < f64::EPSILON);
+            assert!((settings.train.gate.floor + 2.0).abs() < f64::EPSILON);
+            Ok(())
+        });
+        assert_eq!(invalid("[train]\nparity = 0.0\n"), Some("train.parity"));
+        assert_eq!(invalid("[train]\nparity = 1.5\n"), Some("train.parity"));
+        assert_eq!(invalid("[train]\nexporter = []\n"), Some("train.exporter"));
+        assert_eq!(invalid("[train.gate]\nstrict = 0.0\nstrictness = 1\n"), Some("load"));
     }
 
     #[test]

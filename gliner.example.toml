@@ -31,3 +31,24 @@ cache = 4096
 # window = 2048
 # Words consecutive windows share, so entities across a boundary are still seen whole.
 overlap = 32
+
+[train]
+# The train role (the gliner-train image): /datasets, /evals, /eval, /promote and /train answer 501 while false.
+enabled = false
+# datasets/ and evals/ live here, one <name>.jsonl each.
+data = "data/train"
+# Command lines of the Python tools, program first; the job appends the arguments.
+trainer = ["uv", "run", "-q", "--project", "tools/train", "python", "tools/train/train.py"]
+exporter = ["uv", "run", "-q", "--project", "tools/export", "python", "tools/export/export.py"]
+reference = ["uv", "run", "-q", "--project", "tools/export", "python", "tools/export/parity.py"]
+# Share of predictions the exported candidate must keep identical to PyTorch on every eval text, in (0, 1].
+parity = 0.99
+
+[train.gate]
+# F1 points (0-100), candidate minus champion, pooled over every eval set; all three must hold.
+# Strict (span + label) delta, point estimate.
+strict = 0.0
+# Lower bound of the strict delta's 95 % paired-bootstrap interval.
+floor = -1.0
+# Lenient (distinct names per text) delta.
+lenient = -1.0
