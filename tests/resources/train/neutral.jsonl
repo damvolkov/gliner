@@ -1,0 +1,8 @@
+{"text": "Hedy Lamarr vivió en Viena antes de mudarse a Hollywood.", "entities": [{"start": 0, "end": 11, "label": "person"}, {"start": 21, "end": 26, "label": "location"}, {"start": 46, "end": 55, "label": "location"}]}
+{"text": "Dennis Ritchie wrote the C compiler at Bell Labs in New Jersey.", "entities": [{"start": 0, "end": 14, "label": "person"}, {"start": 39, "end": 48, "label": "organization"}, {"start": 52, "end": 62, "label": "location"}]}
+{"text": "La Universidad de Salamanca guarda manuscritos medievales.", "entities": [{"start": 3, "end": 27, "label": "organization"}]}
+{"text": "Our staging cluster runs Nginx and Docker in Frankfurt.", "entities": [{"start": 25, "end": 30, "label": "software tool"}, {"start": 35, "end": 41, "label": "software tool"}, {"start": 45, "end": 54, "label": "location"}]}
+{"text": "Barbara Liskov enseñó en el MIT durante décadas.", "entities": [{"start": 0, "end": 14, "label": "person"}, {"start": 28, "end": 31, "label": "organization"}]}
+{"text": "Guido van Rossum created Python while working at CWI in Amsterdam.", "entities": [{"start": 0, "end": 16, "label": "person"}, {"start": 25, "end": 31, "label": "software tool"}, {"start": 49, "end": 52, "label": "organization"}, {"start": 56, "end": 65, "label": "location"}]}
+{"text": "El CERN tiene su sede cerca de Ginebra.", "entities": [{"start": 3, "end": 7, "label": "organization"}, {"start": 31, "end": 38, "label": "location"}]}
+{"text": "Ken Thompson diseñó Unix junto a Dennis Ritchie.", "entities": [{"start": 0, "end": 12, "label": "person"}, {"start": 20, "end": 24, "label": "software tool"}, {"start": 33, "end": 47, "label": "person"}]}

@@ -54,3 +54,50 @@ impl Recognizer for FakeRecognizer {
         }
     }
 }
+
+/// The champion that cannot be beaten: the neutral eval set's gold entities, for the labels asked.
+#[derive(Debug)]
+pub struct GoldRecognizer {
+    gold: std::collections::HashMap<String, Vec<gliner::schema::dataset::SpanDataset>>,
+}
+
+impl GoldRecognizer {
+    pub fn new() -> Self {
+        let lines = std::fs::read_to_string(crate::app::resource("eval/neutral.jsonl")).unwrap();
+        Self {
+            gold: lines
+                .lines()
+                .map(|line| serde_json::from_str::<gliner::schema::dataset::LineDataset>(line).unwrap())
+                .map(|line| (line.text, line.entities))
+                .collect(),
+        }
+    }
+}
+
+impl Recognizer for GoldRecognizer {
+    fn predict(&self, text: &str, labels: &[String], _: f32) -> Result<Vec<Entity>, RecognizerError> {
+        Ok(self
+            .gold
+            .get(text)
+            .into_iter()
+            .flatten()
+            .filter(|span| labels.contains(&span.label))
+            .map(|span| Entity {
+                start: span.start,
+                end: span.end,
+                text: text.chars().skip(span.start).take(span.end - span.start).collect(),
+                label: span.label.clone(),
+                score: 1.0,
+            })
+            .collect())
+    }
+
+    fn card(&self) -> ModelCard {
+        ModelCard {
+            model: "gold".to_owned(),
+            version: String::new(),
+            labels_cached: 0,
+            served: None,
+        }
+    }
+}

@@ -65,6 +65,10 @@ async fn test_train_routes_answer_501_when_disabled() {
         ("GET", "/evals"),
         ("POST", "/eval"),
         ("POST", "/promote"),
+        ("POST", "/train"),
+        ("GET", "/train"),
+        ("GET", "/train/1"),
+        ("DELETE", "/train/1"),
     ];
     for (method, uri) in routes {
         let (status, reply): (StatusCode, Value) = send(&serving, method, uri, "{}").await;

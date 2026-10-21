@@ -8,3 +8,4 @@ pub mod ner;
 pub mod promote;
 pub mod server;
 pub mod state;
+pub mod train;

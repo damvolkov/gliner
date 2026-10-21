@@ -146,8 +146,19 @@ impl ModelRegistry {
         )
     }
 
+    /// The checkpoint id a version's lineage started from: its manifest's `model` (a trained version is exported
+    /// under its lineage's id).
+    ///
+    /// # Errors
+    /// The version is not registered or its artifact does not open.
+    pub fn model(&self, version: u32) -> Result<String, RegistryError> {
+        let dir = self.path(version);
+        dir.is_dir().then_some(()).ok_or(RegistryError::Unknown(version))?;
+        Ok(ModelArtifact::open(&dir)?.manifest.model)
+    }
+
     /// The model a version's training starts from: its checkpoint dir, or for a root version the checkpoint id
-    /// it was exported from (its manifest's `model`).
+    /// it was exported from.
     ///
     /// # Errors
     /// The version is not registered or its manifest is unreadable.
@@ -158,7 +169,7 @@ impl ModelRegistry {
         if checkpoint.is_dir() {
             Ok(checkpoint.to_string_lossy().into_owned())
         } else {
-            Ok(ModelArtifact::open(&dir)?.manifest.model)
+            self.model(version)
         }
     }
 

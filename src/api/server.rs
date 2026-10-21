@@ -17,6 +17,7 @@ use crate::api::models::models;
 use crate::api::ner::ner;
 use crate::api::promote::promote;
 use crate::api::state::AppState;
+use crate::api::train;
 use crate::config::model::ModelConfig;
 use crate::core::settings::Settings;
 use crate::runtime::artifact::{ArtifactError, ModelArtifact};
@@ -25,6 +26,7 @@ use crate::runtime::lab::TrainLab;
 use crate::runtime::onnx::{OnnxError, OnnxRuntime};
 use crate::runtime::registry::{ModelRegistry, RegistryError};
 use crate::runtime::store::{DataStore, KindStore, StoreError};
+use crate::runtime::toolchain::ProcessToolchain;
 use crate::schema::error::RequestError;
 
 #[derive(Debug, thiserror::Error)]
@@ -133,6 +135,8 @@ impl HttpServer {
             )
             .route("/eval", post(eval))
             .route("/promote", post(promote))
+            .route("/train", post(train::start).get(train::list))
+            .route("/train/{id}", get(train::job).delete(train::cancel))
             .with_state(state)
     }
 
@@ -149,7 +153,16 @@ impl HttpServer {
             .enabled
             .then(|| DataStore::open(&settings.train.data, settings.server.line))
             .transpose()?
-            .map(|store| Arc::new(TrainLab::new(registry, store, Arc::clone(&state.slot), settings)));
+            .map(|store| {
+                let toolchain = Arc::new(ProcessToolchain::new(&settings.train));
+                Arc::new(TrainLab::new(
+                    registry,
+                    store,
+                    Arc::clone(&state.slot),
+                    toolchain,
+                    settings,
+                ))
+            });
         let address = SocketAddr::new(settings.server.host, settings.server.port);
         let listener = TcpListener::bind(address).await?;
         tracing::info!(%address, model = %artifact.manifest.model, version, "server.listening");

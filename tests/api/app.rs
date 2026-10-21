@@ -18,6 +18,7 @@ use serde_json::Value;
 use tower::ServiceExt;
 
 use crate::fake::FakeRecognizer;
+use crate::toolchain::{FakeToolchain, ModeFake};
 
 /// Default settings with `concurrency` predictions in flight and 1 KiB lines; the model not loaded yet.
 pub fn state(concurrency: usize) -> AppState {
@@ -89,6 +90,10 @@ pub fn tiny_settings() -> Settings {
 }
 
 pub fn lab() -> Lab {
+    lab_with(Arc::new(FakeToolchain::new(ModeFake::Pass)))
+}
+
+pub fn lab_with(toolchain: Arc<FakeToolchain>) -> Lab {
     let root = tempfile::tempdir().unwrap();
     let models = root.path().join("models");
     copy_tiny(&models.join("1"));
@@ -115,6 +120,7 @@ pub fn lab() -> Lab {
         registry,
         store,
         Arc::clone(&state.slot),
+        toolchain,
         &settings,
     )));
     Lab { state, root }

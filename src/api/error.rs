@@ -4,6 +4,8 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use serde_json::json;
 
+use crate::runtime::board::BoardError;
+use crate::runtime::job::JobError;
 use crate::runtime::lab::LabError;
 use crate::runtime::registry::RegistryError;
 use crate::runtime::store::StoreError;
@@ -24,10 +26,27 @@ pub enum ApiError {
     Disabled,
     #[error(transparent)]
     Lab(#[from] LabError),
+    #[error(transparent)]
+    Job(#[from] JobError),
 }
 
 impl ApiError {
     // ##### PRIVATE #####
+
+    const fn into_job_status(error: &JobError) -> StatusCode {
+        match error {
+            JobError::Lab(error) => Self::into_lab_status(error),
+            JobError::Board(BoardError::Unknown(_)) => StatusCode::NOT_FOUND,
+            JobError::Board(BoardError::Busy(_) | BoardError::Finished(_)) => StatusCode::CONFLICT,
+            JobError::Params(_) => StatusCode::UNPROCESSABLE_ENTITY,
+            JobError::Toolchain(_)
+            | JobError::Unvalidated
+            | JobError::Leakage(_)
+            | JobError::Candidate(_)
+            | JobError::Parity { .. }
+            | JobError::File { .. } => StatusCode::INTERNAL_SERVER_ERROR,
+        }
+    }
 
     const fn into_lab_status(error: &LabError) -> StatusCode {
         match error {
@@ -57,6 +76,7 @@ impl IntoResponse for ApiError {
             Self::Recognizer(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::Disabled => StatusCode::NOT_IMPLEMENTED,
             Self::Lab(error) => Self::into_lab_status(error),
+            Self::Job(error) => Self::into_job_status(error),
         };
         (status, Json(json!({ "error": self.to_string() }))).into_response()
     }

@@ -1,5 +1,7 @@
 pub mod artifact;
+pub mod board;
 pub mod executor;
+pub mod job;
 pub mod lab;
 pub mod onnx;
 pub mod registry;
