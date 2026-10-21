@@ -9,6 +9,8 @@ CONFIG ?=
 CONFIGURED = $(if $(CONFIG),--config $(CONFIG))
 MODEL ?= knowledgator/gliner-bi-base-v2.0
 NAME = $(notdir $(MODEL))
+INTO ?=
+REGISTRY = $(MODELS)/$(or $(INTO),$(NAME))
 MODELS ?= data/models
 IMAGE ?= gliner:latest
 IMAGE_TRAIN ?= gliner-train:latest
@@ -17,9 +19,9 @@ DATA ?= data/train
 PORT ?= 5800
 EXPORT = uv run -q --project tools/export python
 MAINTAIN = uv run -q --project tools
-SCRIPTS = tools/health.py tools/upstream.py tests/tools
+SCRIPTS = tools/health.py tools/upstream.py tools/models.py tests/tools
 ARGS = $(filter-out $(firstword $(MAKECMDGOALS)),$(MAKECMDGOALS))
-.PHONY: help install toolchain tools hooks export fixture tiny serve build fmt lint bounds test backends bench smoke coverage licenses health pytest gates check image image-train up down release docs docs-serve
+.PHONY: help install toolchain tools hooks export fixture tiny serve build fmt lint bounds test backends bench smoke coverage licenses health models pytest gates check image image-train up down release docs docs-serve
 
 help:  ## list targets
 	@awk 'BEGIN{FS=":.*##"} /^[a-z][a-zA-Z0-9_-]*:.*##/{printf "  \033[32m%-10s\033[0m %s\n",$$1,$$2}' $(MAKEFILE_LIST)
@@ -39,10 +41,13 @@ tools:  ## prek, cargo-llvm-cov and cargo-about, then the git hooks
 hooks:  ## run every prek hook on every file (what CI runs)
 	@uvx prek==$(PREK_VERSION) run --all-files --show-diff-on-failure
 
-export:  ## export a GLiNER bi-encoder as version 1 of a new registry: make export MODEL=… → data/models/<name>/1, current = 1
-	@test ! -e $(MODELS)/$(NAME)/1 || { echo "$(MODELS)/$(NAME) already holds version 1"; exit 1; }
-	@$(EXPORT) tools/export/export.py $(MODEL) --out $(MODELS)/$(NAME)/1
-	@printf '1\n' > $(MODELS)/$(NAME)/current
+export:  ## export a GLiNER bi-encoder: MODEL=… → a new registry data/models/<name>/1, current = 1; INTO=<registry> → its next version, current untouched
+	@next=1; [ -z "$(INTO)" ] || { test -d $(REGISTRY) || { echo "no registry at $(REGISTRY)"; exit 1; }; \
+	  next=$$(( $$(ls $(REGISTRY) | grep -xE '[0-9]+' | sort -n | tail -1) + 1 )); }; \
+	  test ! -e $(REGISTRY)/$$next || { echo "$(REGISTRY) already holds version $$next"; exit 1; }; \
+	  rm -rf $(REGISTRY)/.export-$$next && $(EXPORT) tools/export/export.py $(MODEL) --out $(REGISTRY)/.export-$$next \
+	  && mv $(REGISTRY)/.export-$$next $(REGISTRY)/$$next \
+	  && { [ -n "$(INTO)" ] || printf '1\n' > $(REGISTRY)/current; } && echo "$(MODEL) → $(REGISTRY)/$$next"
 
 fixture:  ## PyTorch predictions over the parity texts → tests/resources/parity/torch.json [MODEL=…]
 	@$(EXPORT) tools/export/parity.py $(MODEL) --texts tests/resources/parity/texts.json --out tests/resources/parity/torch.json
@@ -90,6 +95,9 @@ licenses:  ## regenerate THIRD_PARTY_LICENSES.md from the dependency tree
 
 health:  ## dependency health report (archived, vanished, stale, dormant upstreams) → stdout
 	@uv run -q --no-project python -m tools.health --output /dev/stdout
+
+models:  ## model watch: GLiNER-family models on the Hub newer than the served base (tools/models.toml) → stdout
+	@uv run -q --no-project python -m tools.models --output /dev/stdout
 
 pytest:  ## the maintenance tools' tests (offline fixtures) and ruff [args forwarded]
 	@$(MAINTAIN) ruff check --config tools/pyproject.toml $(SCRIPTS) && $(MAINTAIN) ruff format --check --config tools/pyproject.toml $(SCRIPTS)

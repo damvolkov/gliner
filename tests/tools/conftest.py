@@ -1,10 +1,32 @@
+import json
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
+from urllib.parse import parse_qs, urlsplit
 
 import pytest
 
 RESOURCES = Path(__file__).parents[1] / "resources"
+QUERY = ("author", "search", "filter")
+
+
+@pytest.fixture
+def hub_config() -> Path:
+    return RESOURCES / "hub" / "models.toml"
+
+
+@pytest.fixture
+def hub() -> Callable[[str], Any]:
+    """The Hub's public API replayed from a fixture: a search keyed by its track, a model or a file by its path."""
+    responses = json.loads((RESOURCES / "hub" / "responses.json").read_text())
+
+    def get(url: str) -> Any:
+        parts = urlsplit(url)
+        query = parse_qs(parts.query)
+        track = "&".join(f"{key}={query[key][0]}" for key in QUERY if key in query)
+        return responses.get(f"{parts.path}?{track}" if track else parts.path)
+
+    return get
 
 
 @pytest.fixture

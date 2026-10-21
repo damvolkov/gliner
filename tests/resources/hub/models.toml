@@ -1,0 +1,11 @@
+base = "acme/gliner-bi-base"
+licenses = ["apache-2.0", "mit"]
+ignore = ["noise/*"]
+
+[[track]]
+author = "acme"
+search = "gliner-bi"
+
+[[track]]
+filter = "gliner"
+min_downloads = 1000

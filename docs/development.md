@@ -35,6 +35,7 @@ tools/
   train/     the uv project that fine-tunes one
   health.py      dependency health report (crates.io, PyPI, GitHub)      stdlib only:
   upstream.py    what a Renovate PR changed: versions, notes, public API  python -m tools.<name>
+  models.py      model watch over models.toml (the Hugging Face Hub)
   pyproject.toml their tests (tests/tools, offline fixtures) and ruff: make pytest
 ```
 
@@ -50,6 +51,7 @@ that direction. The model-free tests run the real ONNX Runtime path on `tests/re
 | `docs.yml` | push to main | builds this site, deploys GitHub Pages | `DOCS_DEPLOY` |
 | `release.yml` | manual | tags `v<Cargo.toml version>`, GitHub release; pushes `ghcr.io/<owner>/gliner:X.Y.Z` and `:latest` | image: `PUBLISH_IMAGE` |
 | `health.yml` | monthly | `tools/health.py` (crates.io, PyPI, GitHub); opens/refreshes/closes a `deps-health` issue | always on |
+| `models.yml` | monthly | `tools/models.py`: GLiNER-family models on the Hub newer than the served base; opens/refreshes/closes a `model-watch` issue ([Model](model.md#model-watch)) | always on |
 | `sync.yml` | Renovate PRs | lockfiles (`Cargo.lock`, the tools' `uv.lock`), changelog line for an engine bump (ort, tokenizers), `THIRD_PARTY_LICENSES.md` | `RENOVATE_SYNC` + App |
 | `maintenance.yml` | CI done on a Renovate PR | an agent (`QWEN.md`) repairs a red CI (`fix`) or adopts new upstream API (`expose`) within an allowlist; at most 3 attempts | `MAINTENANCE_AGENT` + App + `QWEN_API_KEY` |
 
@@ -71,6 +73,7 @@ upstream, `maintenance.yml` mends the gaps, `health.yml` reports; a human merges
 | Engine line | `CHANGELOG.md` → `## [Unreleased]` | `sync.yml` | an ort or tokenizers bump |
 | Code, tests, tools, docs | `src/`, `tests/`, `tools/`, `docs/`, `CHANGELOG.md`, `README.md` | `maintenance.yml` agent | CI red, or the engine gained API |
 | Health issue | issue labelled `deps-health` | `health.yml` | monthly |
+| Model watch | issue labelled `model-watch` (human triage only) | `models.yml` | monthly |
 
 Human-only: merging, the package version, release tags, `.github/`, `QWEN.md`, `Cargo.toml`, `prek.toml`. The
 agent's limits are enforced by code: the workflow commits only allowlisted files and names every discarded one.
@@ -86,12 +89,13 @@ One-time setup (each step is one screen on github.com):
    and opens the Dependency Dashboard issue.
 4. **The agent** — `gh secret set QWEN_API_KEY`; optional variables `QWEN_MODEL`, `QWEN_BASE_URL`,
    `QWEN_CLI_VERSION` (`.github/ci.vars.example`).
-5. **Labels** — `for l in upstream-update tooling ai-modified needs-human deps-health; do gh label create "$l" || true; done`.
+5. **Labels** — `for l in upstream-update tooling ai-modified needs-human deps-health model-watch; do gh label create "$l" || true; done`.
 6. **Gates** — `gh variable set RENOVATE_SYNC --body true`, then `MAINTENANCE_AGENT` once the loop is trusted.
 7. **Protect `main`** — require a PR with one approval and the `ci` checks; no bypass, and the App off the allow list.
 
 Verify: the Dependency Dashboard exists; a `renovate/*` PR gets a `chore(sync)` commit and an `upstream-context`
-artifact; Actions → health → Run workflow opens or closes the `deps-health` issue. By hand: `make health`,
+artifact; Actions → health (models) → Run workflow opens or closes the `deps-health` (`model-watch`) issue. By hand:
+`make health`, `make models`,
 `uv run --no-project python -m tools.upstream --base <tree of main> --output context`.
 
 ## Releasing

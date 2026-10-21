@@ -6,8 +6,9 @@
 # Enable:  gh variable set NAME --body true      (a setting: --body <value>)
 # Disable: gh variable delete NAME
 #
-# Always on (no gate): ci.yml (prek hooks, coverage, image build; upstream-context on renovate/* PRs) and health.yml
-# (monthly dependency health issue). Renovate acts once its GitHub App is installed on the repository.
+# Always on (no gate): ci.yml (prek hooks, coverage, image build; upstream-context on renovate/* PRs), health.yml
+# (monthly dependency health issue) and models.yml (monthly model-watch issue, Hugging Face Hub, no token).
+# Renovate acts once its GitHub App is installed on the repository.
 # One-time setup of the App, Renovate, the agent's key and the labels: docs/development.md#self-maintenance.
 
 ##### GATES #####

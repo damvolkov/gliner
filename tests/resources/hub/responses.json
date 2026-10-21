@@ -1,0 +1,20 @@
+{
+  "/api/models/acme/gliner-bi-base": {"id": "acme/gliner-bi-base", "createdAt": "2025-08-24T16:36:18.000Z"},
+  "/api/models?author=acme&search=gliner-bi": [
+    {"id": "acme/gliner-bi-base", "createdAt": "2025-08-24T16:36:18.000Z", "downloads": 300, "cardData": {"license": "apache-2.0"}},
+    {"id": "acme/gliner-bi-old", "createdAt": "2025-01-02T00:00:00.000Z", "downloads": 90, "cardData": {"license": "apache-2.0"}},
+    {"id": "acme/gliner-bi-large", "createdAt": "2025-09-01T10:00:00.000Z", "downloads": 50, "cardData": {"license": "Apache-2.0"}, "safetensors": {"total": 530000000}},
+    {"id": "acme/gliner-bi-gpl", "createdAt": "2025-10-01T10:00:00.000Z", "downloads": 5000, "cardData": {"license": "gpl-3.0"}}
+  ],
+  "/api/models?filter=gliner": [
+    {"id": "acme/gliner-bi-large", "createdAt": "2025-09-01T10:00:00.000Z", "downloads": 50, "cardData": {"license": "apache-2.0"}},
+    {"id": "other/gliner-uni", "createdAt": "2026-02-01T00:00:00.000Z", "downloads": 20000, "tags": ["gliner", "license:mit"]},
+    {"id": "other/gliner-token", "lastModified": "2026-03-01T00:00:00.000Z", "downloads": 3000, "cardData": {"license": "mit"}},
+    {"id": "other/gliner2", "createdAt": "2026-01-15T00:00:00.000Z", "downloads": 9000, "cardData": {"license": "apache-2.0"}},
+    {"id": "other/gliner-quiet", "createdAt": "2026-04-01T00:00:00.000Z", "downloads": 10, "cardData": {"license": "mit"}},
+    {"id": "noise/gliner-domain", "createdAt": "2026-05-01T00:00:00.000Z", "downloads": 90000, "cardData": {"license": "mit"}}
+  ],
+  "/acme/gliner-bi-large/resolve/main/gliner_config.json": {"labels_encoder": "BAAI/bge-small-en-v1.5", "span_mode": "markerV0", "words_splitter_type": "whitespace", "subtoken_pooling": "first"},
+  "/other/gliner-uni/resolve/main/gliner_config.json": {"labels_encoder": null, "span_mode": "markerV0"},
+  "/other/gliner-token/resolve/main/gliner_config.json": {"labels_encoder": "BAAI/bge-small-en-v1.5", "span_mode": "token_level"}
+}

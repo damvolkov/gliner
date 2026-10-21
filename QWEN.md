@@ -52,6 +52,12 @@ Never `.github/`, `Cargo.toml`, `Cargo.lock`, `prek.toml`, `QWEN.md`, `tools/*/p
 8. Done means: `make check && make coverage`.
 9. Do NOT commit or push — the workflow commits, through an allowlist gate, after you finish.
 
+## Model watch
+
+An issue labelled `model-watch` (from `models.yml`) lists newer GLiNER-family models. It is triaged by a human. You
+never swap, export, register or promote a model, never edit `tools/models.toml`, and never change `MODEL`, the
+served base, or `model.*` defaults because of it.
+
 ## Summary format (end your run with this)
 
 ```

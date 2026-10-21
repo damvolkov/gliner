@@ -22,8 +22,14 @@ At load every file is hashed against the manifest; a mismatch refuses to serve.
 make export MODEL=knowledgator/gliner-bi-base-v2.0     # → data/models/gliner-bi-base-v2.0/1, current = 1
 ```
 
-It refuses to overwrite an existing version 1. A trained version is exported by the train job from its local
-checkpoint (`export.py <checkpoint dir> --name <lineage id>`).
+It refuses to overwrite an existing version 1. `INTO=<registry>` exports into an existing registry as its next version
+instead, staged in a dot-dir and renamed into place, `current` untouched:
+
+```bash
+make export MODEL=knowledgator/gliner-bi-large-v2.0 INTO=gliner-bi-base-v2.0   # → data/models/gliner-bi-base-v2.0/2
+```
+
+A trained version is exported by the train job from its local checkpoint (`export.py <checkpoint dir> --name <lineage id>`).
 
 `tools/export` is a uv project (PyTorch CPU, gliner 0.2.29) — with `tools/train`, the only Python here, because
 exporting from and training in PyTorch have no Rust path. It works around two bugs of gliner 0.2.29's `export_to_onnx(from_labels_embeddings=True)`: the
@@ -33,6 +39,37 @@ the core expects `labels_embeds`. The label tower is exported separately and che
 
 Any GLiNER **bi-encoder** whose config uses the `whitespace` splitter and `first` sub-token pooling fits the
 contract; uni-encoders (labels in the prompt) do not.
+
+## Model watch
+
+`.github/workflows/models.yml` (monthly, and on demand) runs `tools/models.py` over `tools/models.toml`: the served
+base, the licences accepted (Apache-2.0, MIT), the tracked Hub searches (knowledgator `gliner-bi*`/`gliner-x*`,
+urchade `gliner*`, fastino `gliner2*`, numind `NuNER*`, and every model tagged `gliner` above a download floor) and
+the ids already triaged (`ignore`, globs allowed). It opens or refreshes one issue labelled `model-watch` listing every
+candidate created after the base — id, date, licence, downloads, parameters when the Hub knows them, its architecture
+from `gliner_config.json`, and whether this service can serve it — and closes it when nothing is newer. Servable
+candidates come first. `make models` prints the same report locally.
+
+The issue is triaged by a human; no workflow and no agent ever swaps the served model.
+
+### Evaluating a candidate
+
+Only a candidate marked servable (a bi-encoder in span mode, whitespace words, first sub-token pooling) fits the
+artifact contract. Evaluate it with the service itself, against the eval sets registered on the train role — the
+internal regression base the train job's gate uses:
+
+```bash
+make export MODEL=<candidate id> INTO=gliner-bi-base-v2.0       # → the registry's next version, say 3
+curl -s localhost:5800/evals                                      # the registered eval sets
+curl -s localhost:5800/eval -H 'content-type: application/json' -d '{"set": "support"}'               # champion
+curl -s localhost:5800/eval -H 'content-type: application/json' -d '{"set": "support", "version": 3}' # candidate
+```
+
+Compare strict, lenient and per-label F1 set by set; then latency and memory on a registry of its own
+(`make export MODEL=<candidate id>`, then `GLINER_MODEL__DIR=data/models/<name> make bench`), and the licence of its
+weights. Promote it
+(`POST /promote {"version": 3}`) only by that decision; a candidate that loses stays registered, unserved, or is
+deleted by hand. Then set `base` in `tools/models.toml` and `MODEL` in the Makefile to the new base.
 
 ## Parity
 

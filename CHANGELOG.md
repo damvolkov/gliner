@@ -23,6 +23,13 @@ All notable changes to this project are documented in this file.
   routes answer 501.
 - `tools/train`; `tools/export` exports a local checkpoint (`--name`), `parity.py` takes `--labels`/`--threshold`.
 - `make smoke`: one real CPU epoch through the whole job. CI builds the train image behind `TRAIN_IMAGE`.
+- `make export INTO=<registry>`: a checkpoint exported as the next version of an existing registry, `current`
+  untouched, so a candidate model is scored against the champion with `POST /eval`.
+- Model watch: `tools/models.py` and a monthly `model-watch` issue listing GLiNER-family models newer than the served
+  base (Apache-2.0/MIT), with whether this service can serve each; `make models`.
+- Self-maintenance from the e-templates `selfmaintain` feature: `tools/health.py` (replaces `tools/health.sh`),
+  `tools/upstream.py` (versions, release notes and public API of ort, tokenizers and gliner for the maintenance
+  agent), lockfile refresh in `sync.yml`, `fix`/`expose` modes in `maintenance.yml`.
 
 ### Fixed
 

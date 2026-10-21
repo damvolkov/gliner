@@ -1,0 +1,58 @@
+##### MODELS #####
+# Monthly, deterministic: is there a more evolved GLiNER-family model than the one served (tools/models.py over
+# tools/models.toml, the Hugging Face Hub's public API)? Opens (or refreshes) one issue labelled model-watch; closes it
+# once nothing is newer. A human triages it; nothing here, nor the maintenance agent, ever swaps the served model.
+name: models
+
+on:
+  schedule:
+    - cron: "0 6 1 * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  watch:
+    name: model watch
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+      - name: query the Hub
+        id: probe
+        run: |
+          set +e
+          uv run --no-project python -m tools.models --output report.md
+          STATUS=$?
+          set -e
+          [ "$STATUS" -eq 0 ] || [ "$STATUS" -eq 3 ] || exit "$STATUS"
+          echo "findings=$([ "$STATUS" -eq 3 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+      - name: open, refresh or close the model-watch issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FINDINGS: ${{ steps.probe.outputs.findings }}
+        run: |
+          ISSUE=$(gh issue list --label model-watch --state open --json number -q '.[0].number')
+          {
+            echo "Monthly model watch (\`tools/models.py\`, tracks in \`tools/models.toml\`): GLiNER-family NER models"
+            echo "created after the served base, Apache-2.0 or MIT. \"Served here\" reads each candidate's"
+            echo "\`gliner_config.json\`: a bi-encoder in span mode, whitespace words, first sub-token pooling."
+            echo
+            cat report.md
+            echo
+            echo "Triage: evaluate a candidate with the service itself (docs/model.md, \"Evaluating a candidate\"),"
+            echo "or add its id to \`ignore\` in \`tools/models.toml\`. Nothing swaps the served model but a human."
+            echo
+            echo "Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          } > body.md
+          case "$FINDINGS:${ISSUE:+open}" in
+            true:open) gh issue edit "$ISSUE" --body-file body.md ;;
+            true:)     gh issue create --title "Model watch: candidates" --label model-watch --body-file body.md ;;
+            false:open) gh issue close "$ISSUE" --comment "Nothing newer than the served base." ;;
+            *) echo "Nothing newer than the served base." ;;
+          esac
