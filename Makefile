@@ -11,10 +11,13 @@ MODEL ?= knowledgator/gliner-bi-base-v2.0
 NAME = $(notdir $(MODEL))
 MODELS ?= data/models
 IMAGE ?= gliner:latest
+IMAGE_TRAIN ?= gliner-train:latest
+TORCH ?= cpu
+DATA ?= data/train
 PORT ?= 5800
 EXPORT = uv run -q --project tools/export python
 ARGS = $(filter-out $(firstword $(MAKECMDGOALS)),$(MAKECMDGOALS))
-.PHONY: help install toolchain tools hooks export fixture tiny serve build fmt lint bounds test backends bench smoke coverage licenses health gates check image up down release docs docs-serve
+.PHONY: help install toolchain tools hooks export fixture tiny serve build fmt lint bounds test backends bench smoke coverage licenses health gates check image image-train up down release docs docs-serve
 
 help:  ## list targets
 	@awk 'BEGIN{FS=":.*##"} /^[a-z][a-zA-Z0-9_-]*:.*##/{printf "  \033[32m%-10s\033[0m %s\n",$$1,$$2}' $(MAKEFILE_LIST)
@@ -95,6 +98,9 @@ check: lint bounds gates test  ## the local gate
 
 image:  ## build the runtime image → $(IMAGE)
 	@docker build -f docker/Dockerfile -t $(IMAGE) .
+
+image-train:  ## build the train image (PyTorch and the tools) → $(IMAGE_TRAIN) [TORCH=cpu|cu128]
+	@docker build -f docker/Dockerfile.train --build-arg TORCH=$(TORCH) -t $(IMAGE_TRAIN) .
 
 up:  ## run the image on :$(PORT) with the registry data/models/<name> mounted read-only [MODEL=…]
 	@docker run -d --rm --name gliner -p $(PORT):5800 -v $(CURDIR)/$(MODELS)/$(NAME):/models:ro $(IMAGE)

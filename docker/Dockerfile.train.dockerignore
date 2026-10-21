@@ -1,0 +1,13 @@
+*
+!.cargo/
+!Cargo.toml
+!Cargo.lock
+!rust-toolchain.toml
+!src/
+!tools/train/pyproject.toml
+!tools/train/uv.lock
+!tools/train/train.py
+!tools/export/pyproject.toml
+!tools/export/uv.lock
+!tools/export/export.py
+!tools/export/parity.py
