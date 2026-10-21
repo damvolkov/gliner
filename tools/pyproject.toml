@@ -1,0 +1,25 @@
+[project]
+name = "gliner-maintain"
+version = "0.1.0"
+description = "Self-maintenance tools (health, upstream, models): stdlib only; this project holds their tests and lint"
+requires-python = ">=3.13"
+dependencies = []
+
+[dependency-groups]
+dev = ["pytest>=9.1", "ruff>=0.17"]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+pythonpath = [".."]
+testpaths = ["../tests/tools"]
+addopts = ["--import-mode=importlib", "-q"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "PL", "PERF"]
+ignore = ["PLR2004"]

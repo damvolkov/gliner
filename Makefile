@@ -16,8 +16,10 @@ TORCH ?= cpu
 DATA ?= data/train
 PORT ?= 5800
 EXPORT = uv run -q --project tools/export python
+MAINTAIN = uv run -q --project tools
+SCRIPTS = tools/health.py tools/upstream.py tests/tools
 ARGS = $(filter-out $(firstword $(MAKECMDGOALS)),$(MAKECMDGOALS))
-.PHONY: help install toolchain tools hooks export fixture tiny serve build fmt lint bounds test backends bench smoke coverage licenses health gates check image image-train up down release docs docs-serve
+.PHONY: help install toolchain tools hooks export fixture tiny serve build fmt lint bounds test backends bench smoke coverage licenses health pytest gates check image image-train up down release docs docs-serve
 
 help:  ## list targets
 	@awk 'BEGIN{FS=":.*##"} /^[a-z][a-zA-Z0-9_-]*:.*##/{printf "  \033[32m%-10s\033[0m %s\n",$$1,$$2}' $(MAKEFILE_LIST)
@@ -86,15 +88,19 @@ coverage:  ## line coverage of the model-free tests; fails under $(COVERAGE)%
 licenses:  ## regenerate THIRD_PARTY_LICENSES.md from the dependency tree
 	@cargo about generate --locked about.hbs | tr -d "\r" > THIRD_PARTY_LICENSES.md
 
-health:  ## dependency health report (archived, dormant, stale upstreams) → stdout
-	@tools/health.sh
+health:  ## dependency health report (archived, vanished, stale, dormant upstreams) → stdout
+	@uv run -q --no-project python -m tools.health --output /dev/stdout
+
+pytest:  ## the maintenance tools' tests (offline fixtures) and ruff [args forwarded]
+	@$(MAINTAIN) ruff check --config tools/pyproject.toml $(SCRIPTS) && $(MAINTAIN) ruff format --check --config tools/pyproject.toml $(SCRIPTS)
+	@$(MAINTAIN) pytest -c tools/pyproject.toml $(ARGS)
 
 gates:  ## every vars.* a workflow reads is declared inert (false or empty) in .github/ci.vars.example
 	@used="$$(grep -rhoE 'vars\.[A-Z_]+' .github/workflows | sed 's/vars\.//' | sort -u)"; \
 	  for gate in $$used; do grep -qE "^$$gate=(false)?( |$$)" .github/ci.vars.example || { echo "gate $$gate is undeclared or ships enabled"; exit 1; }; done; \
 	  ! grep -E '^[A-Z_]+=' .github/ci.vars.example | grep -qvE '^[A-Z_]+=(false)?( |$$)' && printf '\033[32mgates ok\033[0m\n'
 
-check: lint bounds gates test  ## the local gate
+check: lint bounds gates test pytest  ## the local gate
 
 image:  ## build the runtime image → $(IMAGE)
 	@docker build -f docker/Dockerfile -t $(IMAGE) .

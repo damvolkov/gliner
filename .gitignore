@@ -29,5 +29,6 @@ rustc-ice-*.txt
 .env
 gliner.toml
 __pycache__/
+.pytest_cache/
 .ruff_cache/
 .venv/

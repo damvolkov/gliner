@@ -1,0 +1,10 @@
+[package]
+name = "gliner"
+version = "0.1.0"
+
+[dependencies]
+ort = { version = "=2.0.0-rc.16" }
+tokenizers = "0.23.2"
+
+[dev-dependencies]
+tower = "0.5"

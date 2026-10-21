@@ -31,8 +31,10 @@ tests/
              eval/ and train/ (small neutral NDJSON sets)
 tools/
   export/    the uv project that exports a checkpoint
-  train/     the uv project that fine-tunes one (the only other Python)
-  health.sh  dependency health report
+  train/     the uv project that fine-tunes one
+  health.py  dependency health report (crates.io, PyPI, GitHub)        ┐ stdlib only, run with
+  upstream.py what a Renovate PR changed: versions, notes, public API   ┘ `python -m tools.<name>`;
+  pyproject.toml  their tests (tests/tools, offline fixtures) and ruff: make pytest
 ```
 
 Layers point inward — `schema ← config ← core ← runtime ← api` — and `make bounds` fails on any import against
@@ -46,7 +48,7 @@ that direction. The model-free tests run the real ONNX Runtime path on `tests/re
 | `ci.yml` | push to main, PRs | prek hooks, coverage, runtime image build; uploads the logs | always on; train image: `TRAIN_IMAGE` |
 | `docs.yml` | push to main | builds this site, deploys GitHub Pages | `DOCS_DEPLOY` |
 | `release.yml` | manual | tags `v<Cargo.toml version>`, GitHub release; pushes `ghcr.io/<owner>/gliner` | image: `PUBLISH_IMAGE` |
-| `health.yml` | monthly | `tools/health.sh`; opens/refreshes/closes a `deps-health` issue | always on (this repository only) |
+| `health.yml` | monthly | `tools/health.py`; opens/refreshes/closes a `deps-health` issue | always on (this repository only) |
 | `sync.yml` | Renovate PRs | changelog line for an engine bump (ort, tokenizers), `THIRD_PARTY_LICENSES.md` | `RENOVATE_SYNC` + App |
 | `maintenance.yml` | CI failed on a Renovate PR | an agent (`QWEN.md`) repairs within an allowlist; at most 3 attempts | `MAINTENANCE_AGENT` + App + `QWEN_API_KEY` |
 

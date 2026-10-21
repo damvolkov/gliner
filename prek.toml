@@ -35,6 +35,7 @@ hooks = [
   { id = "ruff-format", name = "ruff format (tools/export)", entry = "uv run -q --project tools/export ruff format tools/export", language = "system", types_or = ["python", "pyi"], pass_filenames = false },
   { id = "ruff-train", name = "ruff check (tools/train)", entry = "uv run -q --project tools/train ruff check --fix --exit-non-zero-on-fix tools/train", language = "system", types_or = ["python", "pyi"], pass_filenames = false },
   { id = "ruff-format-train", name = "ruff format (tools/train)", entry = "uv run -q --project tools/train ruff format tools/train", language = "system", types_or = ["python", "pyi"], pass_filenames = false },
+  { id = "pytest-maintain", name = "ruff + tests of the maintenance tools (offline)", entry = "make -s pytest", language = "system", files = '^(tools/[a-z]+\.(py|toml)|tests/tools/)', pass_filenames = false },
   { id = "shellcheck", name = "shellcheck", entry = "uvx --from shellcheck-py==0.11.0.1 shellcheck", language = "system", types = ["shell"] },
   { id = "zizmor", name = "workflow hardening scan", entry = "uvx zizmor==1.30.1 --persona=regular .github/workflows", language = "system", files = '^\.github/workflows/.*\.ya?ml$', pass_filenames = false },
   { id = "coverage", name = "coverage ≥ 90% (model-free tests)", entry = "make -s coverage", language = "system", always_run = true, pass_filenames = false, stages = ["pre-push"] },
