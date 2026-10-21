@@ -1,5 +1,5 @@
 use std::num::NonZeroUsize;
-use std::sync::{Mutex, MutexGuard, PoisonError};
+use std::sync::{Mutex, MutexGuard, OnceLock, PoisonError};
 
 use ndarray::{Array2, Axis, Ix4};
 use ort::environment::Environment;
@@ -33,7 +33,8 @@ pub enum OnnxError {
 }
 
 /// A GLiNER bi-encoder on ONNX Runtime: the label tower encodes labels once (cached), the text tower scores every
-/// span of a window against them. Sessions are shared, one run at a time each; intra-op threads always explicit.
+/// span of a window against them. Sessions are shared, one run at a time each; intra-op threads always explicit;
+/// every runtime of the process shares one environment, so versions load side by side.
 pub struct OnnxRuntime {
     _environment: Environment,
     text: Mutex<Session>,
@@ -49,8 +50,26 @@ pub struct OnnxRuntime {
     version: String,
 }
 
+// ### ort accepts one environment per process, ever (a second `build` fails even after the first is dropped).
+static ENVIRONMENT: OnceLock<Result<Environment, String>> = OnceLock::new();
+
 impl OnnxRuntime {
     // ##### PRIVATE #####
+
+    fn load_environment() -> Result<Environment, OnnxError> {
+        ENVIRONMENT
+            .get_or_init(|| {
+                ort::init()
+                    .with_name("gliner")
+                    .build()
+                    .map_err(|error| error.to_string())
+            })
+            .clone()
+            .map_err(|reason| OnnxError::Load {
+                file: ModelArtifact::TEXT,
+                reason,
+            })
+    }
 
     fn load_session(
         environment: &Environment,
@@ -216,13 +235,7 @@ impl OnnxRuntime {
                 file: ModelArtifact::LABELS_TOKENIZER,
                 reason: error.to_string(),
             })?;
-        let environment = ort::init()
-            .with_name("gliner")
-            .build()
-            .map_err(|error| OnnxError::Load {
-                file: ModelArtifact::TEXT,
-                reason: error.to_string(),
-            })?;
+        let environment = Self::load_environment()?;
         let runtime = Self {
             text: Mutex::new(Self::load_session(
                 &environment,
@@ -391,6 +404,15 @@ mod tests {
             ("tiny", 16, 2)
         );
         assert!(format!("{runtime:?}").contains("tiny"));
+    }
+
+    #[test]
+    fn test_load_twice_in_one_process() {
+        let first = runtime(None, 2).unwrap();
+        let second = runtime(None, 2).unwrap();
+        drop(first);
+        let third = runtime(None, 2).unwrap();
+        assert_eq!(second.card(), third.card());
     }
 
     #[test]
