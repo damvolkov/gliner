@@ -1,0 +1,33 @@
+# Every key with its default. Copy to gliner.toml (read from the working directory, or --config PATH) and edit;
+# any key can also be set as GLINER_<SECTION>__<KEY>, e.g. GLINER_MODEL__THREADS=8.
+
+[server]
+host = "0.0.0.0"
+port = 5800
+# Longest NDJSON line /ner/batch accepts, in bytes.
+line = 1048576
+
+[server.log]
+# EnvFilter directive.
+level = "info,ort=warn"
+# json | text
+format = "json"
+
+[model]
+# Artifact dir written by `make export`: text.onnx, labels.onnx, tokenizer.json, labels.tokenizer.json,
+# config.json, manifest.json.
+dir = "data/models/gliner-bi-base-v2.0"
+# ONNX Runtime intra-op threads; unset = the CPUs this process may use (cgroup-aware). Always set explicitly.
+# threads = 8
+# Predictions in flight across all requests; more queue, none are refused.
+concurrency = 2
+# Default score threshold, in (0, 1).
+threshold = 0.5
+# Default labels for /ner/batch lines without their own.
+labels = ["person", "organization", "location"]
+# Label embeddings kept (least recently used evicted).
+cache = 4096
+# Words the encoder sees at once; unset = the model's max_len. Longer texts are windowed.
+# window = 2048
+# Words consecutive windows share, so entities across a boundary are still seen whole.
+overlap = 32
