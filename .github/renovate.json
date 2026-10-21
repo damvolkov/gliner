@@ -8,7 +8,8 @@
     "cargo",
     "pep621",
     "github-actions",
-    "dockerfile"
+    "dockerfile",
+    "rust-toolchain"
   ],
   "schedule": [
     "before 6am on monday"
@@ -22,7 +23,7 @@
   },
   "packageRules": [
     {
-      "description": "The inference engine: one PR per release, at once; changelog and licenses by sync.yml, repairs by maintenance.yml, parity re-checked by hand (make backends).",
+      "description": "The inference engine: one PR per release, at once. ort pins the ONNX Runtime it downloads and links (download-binaries, api-NN), so an ort release is the runtime's. sync.yml records it in the changelog, upstream-context diffs its public API, maintenance.yml repairs; parity is re-checked by hand (make backends).",
       "matchManagers": [
         "cargo"
       ],
@@ -34,7 +35,7 @@
         "at any time"
       ],
       "labels": [
-        "engine-update"
+        "upstream-update"
       ],
       "commitMessagePrefix": "engine:",
       "automerge": false
@@ -50,15 +51,31 @@
       ],
       "groupName": "rust dependencies",
       "labels": [
-        "dependencies"
+        "tooling"
       ]
     },
     {
-      "description": "The export tool (PyTorch, gliner): one weekly PR; a gliner bump means re-exporting and re-checking parity.",
+      "description": "The GLiNER library the tools export and train with: its own PR; a bump means re-exporting and re-checking parity.",
       "matchManagers": [
         "pep621"
       ],
-      "groupName": "export tooling",
+      "matchPackageNames": [
+        "gliner"
+      ],
+      "labels": [
+        "upstream-update"
+      ],
+      "automerge": false
+    },
+    {
+      "description": "The rest of the tools' uv projects (torch, onnx, onnxruntime, transformers, ruff, pytest): one weekly PR; the lockfiles follow in sync.yml.",
+      "matchManagers": [
+        "pep621"
+      ],
+      "matchPackageNames": [
+        "!gliner"
+      ],
+      "groupName": "python tooling",
       "labels": [
         "tooling"
       ]
@@ -83,6 +100,29 @@
       "labels": [
         "tooling"
       ]
+    },
+    {
+      "description": "cargo-chef tags carry the Rust minor (latest-rust-1.94-slim-trixie): it moves with rust-toolchain.toml's channel, in one PR.",
+      "matchPackageNames": [
+        "rust",
+        "lukemathwalker/cargo-chef"
+      ],
+      "groupName": "rust toolchain",
+      "schedule": [
+        "at any time"
+      ],
+      "labels": [
+        "tooling"
+      ]
+    },
+    {
+      "matchManagers": [
+        "dockerfile"
+      ],
+      "matchPackageNames": [
+        "lukemathwalker/cargo-chef"
+      ],
+      "versioning": "regex:^latest-rust-(?<major>\\d+)\\.(?<minor>\\d+)-slim-trixie$"
     },
     {
       "description": "Workflow actions stay pinned by digest; one monthly PR.",

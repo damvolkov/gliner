@@ -1,6 +1,6 @@
 ##### HEALTH #####
-# Monthly, deterministic: are the direct dependencies still alive (tools/health.sh)? Opens (or refreshes) one
-# issue labelled deps-health in this repository; closes it once everything is healthy again.
+# Monthly, deterministic: are the direct dependencies (Cargo.toml's crates, the tools' Python packages) still alive
+# (tools/health.py)? Opens (or refreshes) one issue labelled deps-health; closes it once everything is healthy again.
 name: health
 
 on:
@@ -21,34 +21,35 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: probe crates.io and the repositories
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+      - name: probe registries and repositories
         id: probe
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set +e
-          tools/health.sh > report.md
-          status=$?
+          uv run --no-project python -m tools.health --output report.md --token "$GH_TOKEN"
+          STATUS=$?
           set -e
-          [ "$status" -eq 0 ] || [ "$status" -eq 3 ] || exit "$status"
-          echo "findings=$([ "$status" -eq 3 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          [ "$STATUS" -eq 0 ] || [ "$STATUS" -eq 3 ] || exit "$STATUS"
+          echo "findings=$([ "$STATUS" -eq 3 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
       - name: open, refresh or close the health issue
         env:
           GH_TOKEN: ${{ github.token }}
           FINDINGS: ${{ steps.probe.outputs.findings }}
         run: |
-          issue="$(gh issue list --label deps-health --state open --json number -q '.[0].number')"
+          ISSUE=$(gh issue list --label deps-health --state open --json number -q '.[0].number')
           {
-            echo "Monthly dependency health check (\`tools/health.sh\`): crates gone from crates.io, last release older"
-            echo "than 18 months, archived repositories, repositories without a push in 12 months."
+            echo "Monthly dependency health check (\`tools/health.py\`): archived repositories, vanished packages,"
+            echo "releases older than 18 months, repositories without a push in 12 months."
             echo
             cat report.md
             echo
             echo "Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           } > body.md
-          case "$FINDINGS:${issue:+open}" in
-            true:open) gh issue edit "$issue" --body-file body.md ;;
-            true:) gh issue create --title "Dependency health: findings" --label deps-health --body-file body.md ;;
-            false:open) gh issue close "$issue" --comment "All dependencies healthy again." ;;
+          case "$FINDINGS:${ISSUE:+open}" in
+            true:open) gh issue edit "$ISSUE" --body-file body.md ;;
+            true:)     gh issue create --title "Dependency health: findings" --label deps-health --body-file body.md ;;
+            false:open) gh issue close "$ISSUE" --comment "All dependencies healthy again." ;;
             *) echo "All dependencies healthy." ;;
           esac

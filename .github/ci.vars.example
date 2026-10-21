@@ -6,15 +6,16 @@
 # Enable:  gh variable set NAME --body true      (a setting: --body <value>)
 # Disable: gh variable delete NAME
 #
-# Always on (no gate): ci.yml (prek hooks, coverage, image build) and health.yml (monthly dependency health
-# issue, this repository only). Renovate acts once its GitHub App is installed on the repository.
+# Always on (no gate): ci.yml (prek hooks, coverage, image build; upstream-context on renovate/* PRs) and health.yml
+# (monthly dependency health issue). Renovate acts once its GitHub App is installed on the repository.
+# One-time setup of the App, Renovate, the agent's key and the labels: docs/development.md#self-maintenance.
 
 ##### GATES #####
 DOCS_DEPLOY=false          # docs.yml publishes the site to GitHub Pages from main (Settings → Pages → Source: GitHub Actions)
-PUBLISH_IMAGE=false        # release.yml pushes ghcr.io/<owner>/gliner :X.Y.Z, :X.Y and :latest
-RENOVATE_SYNC=false        # sync.yml commits changelog + THIRD_PARTY_LICENSES.md on renovate/* branches (needs the App below)
+PUBLISH_IMAGE=false        # release.yml pushes ghcr.io/<owner>/gliner :X.Y.Z and :latest (GITHUB_TOKEN, no secret)
+RENOVATE_SYNC=false        # sync.yml commits lockfiles, changelog + THIRD_PARTY_LICENSES.md on renovate/* branches (needs the App below)
 TRAIN_IMAGE=false          # ci.yml also builds docker/Dockerfile.train (PyTorch CPU, 2.4 GB) on every push and PR
-MAINTENANCE_AGENT=false    # maintenance.yml lets the agent repair renovate/* branches whose CI failed (needs the App and QWEN_API_KEY)
+MAINTENANCE_AGENT=false    # maintenance.yml lets the agent repair (CI red) or expose (new upstream API) on renovate/* branches (needs the App and QWEN_API_KEY)
 
 ##### SETTINGS #####
 APP_CLIENT_ID=             # GitHub App that commits for sync/maintenance (contents, pull requests, issues: write); secret APP_PRIVATE_KEY

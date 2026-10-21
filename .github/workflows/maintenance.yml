@@ -1,7 +1,8 @@
 ##### MAINTENANCE #####
-# After CI fails on a Renovate branch: an agent repairs what the update broke. The agent edits files; this
-# workflow alone commits, after an allowlist gate. Never merges. Stops after MAX_ATTEMPTS commits tagged
-# [maintenance] on the branch. Inert until MAINTENANCE_AGENT is on (.github/ci.vars.example).
+# After CI on a Renovate branch: repair what the update broke (fix), or adopt what the dependency gained where the
+# contract allows (expose: CI green and upstream-context lists new public API). The agent edits files; this workflow
+# alone commits, after an allowlist gate. Never merges. Stops after MAX_ATTEMPTS commits tagged [maintenance] on the
+# branch. Inert until MAINTENANCE_AGENT is on (.github/ci.vars.example).
 name: maintenance
 
 on:
@@ -17,17 +18,17 @@ concurrency:
 
 env:
   MAX_ATTEMPTS: 3
-  ALLOWED: ^(src/|tests/(api|server|model)/|docs/|CHANGELOG\.md$|README\.md$)
+  ALLOWED: ^(src/.*|tests/.*|tools/.*|docs/.*|CHANGELOG\.md|README\.md)$
 
 jobs:
   fix:
-    name: repair the update
+    name: repair or expose the update
     if: >
       vars.MAINTENANCE_AGENT == 'true' &&
       github.event.workflow_run.event == 'pull_request' &&
-      github.event.workflow_run.conclusion == 'failure' &&
       startsWith(github.event.workflow_run.head_branch, 'renovate/') &&
-      github.event.workflow_run.head_repository.full_name == github.repository
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.conclusion != 'cancelled'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     permissions:
@@ -62,22 +63,29 @@ jobs:
           GH_TOKEN: ${{ steps.app.outputs.token }}
           BRANCH: ${{ github.event.workflow_run.head_branch }}
           RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
           DEFAULT: ${{ github.event.repository.default_branch }}
         run: |
           PR=$(gh pr list --head "$BRANCH" --json number -q '.[0].number')
           ATTEMPTS=$(git log "origin/$DEFAULT..HEAD" --oneline --grep '\[maintenance\]' | wc -l)
+          ADDED=$(cat .ai-context/upstream-context/api-added.txt 2>/dev/null | wc -l)
           {
             echo "pr=$PR"
             echo "attempts=$ATTEMPTS"
           } >> "$GITHUB_OUTPUT"
+          decide() { echo "run=$1" >> "$GITHUB_OUTPUT"; echo "mode=$2" >> "$GITHUB_OUTPUT"; }
           if [ -z "$PR" ] || [ "$(git rev-parse HEAD)" != "$RUN_SHA" ]; then
-            echo "run=false" >> "$GITHUB_OUTPUT"
+            decide false stale
           elif [ "$ATTEMPTS" -ge "$MAX_ATTEMPTS" ]; then
-            echo "run=false" >> "$GITHUB_OUTPUT"
+            decide false exhausted
             gh pr comment "$PR" --body "maintenance: $MAX_ATTEMPTS attempts used. Needs a human."
             gh pr edit "$PR" --add-label needs-human
+          elif [ "$CONCLUSION" = "failure" ]; then
+            decide true fix
+          elif [ "$CONCLUSION" = "success" ] && [ "$ADDED" -gt 0 ] && [ "$ATTEMPTS" -eq 0 ]; then
+            decide true expose
           else
-            echo "run=true" >> "$GITHUB_OUTPUT"
+            decide false none
           fi
 
       - if: steps.gate.outputs.run == 'true'
@@ -103,8 +111,12 @@ jobs:
           qwen_cli_version: ${{ vars.QWEN_CLI_VERSION || 'latest' }}
           prompt: |
             Follow QWEN.md strictly.
-            CI failed after a dependency update on this branch. Repair the service so it builds and passes again.
-            Context in .ai-context/: ci-logs/build-test.log (the failing CI run).
+            Mode: ${{ steps.gate.outputs.mode }}
+            - fix: CI failed after a dependency update on this branch. Repair the gliner service so it builds and passes again.
+            - expose: CI passes but ort, tokenizers or gliner gained public API. Adopt it only where QWEN.md allows.
+            Context in .ai-context/:
+              - upstream-context/ (versions.txt, release-notes.md, api-added.txt, api-removed.txt, api-diff/)
+              - ci-logs/build-test.log (the CI run: prek hooks, then coverage)
             Before finishing run: make check && make coverage
             Do NOT commit or push. End with the summary format defined in QWEN.md.
 
@@ -115,6 +127,7 @@ jobs:
           TOKEN: ${{ steps.app.outputs.token }}
           SLUG: ${{ steps.app.outputs.app-slug }}
           SUMMARY: ${{ steps.qwen.outputs.summary }}
+          MODE: ${{ steps.gate.outputs.mode }}
           PR: ${{ steps.gate.outputs.pr }}
           ATTEMPTS: ${{ steps.gate.outputs.attempts }}
           BRANCH: ${{ github.event.workflow_run.head_branch }}
@@ -122,7 +135,7 @@ jobs:
           rm -rf .ai-context .qwen qwen-artifacts
           git add -A
           REJECTED=$(git diff --cached --name-only | grep -Ev "$ALLOWED" || true)
-          printf '**maintenance**\n\n%s\n' "$SUMMARY" > /tmp/body.md
+          printf '**maintenance (%s)**\n\n%s\n' "$MODE" "$SUMMARY" > /tmp/body.md
           if [ -n "$REJECTED" ]; then
             printf '%s\n' "$REJECTED" | xargs git reset -q --
             printf '\n**Discarded edits outside the allowlist:**\n```\n%s\n```\n' "$REJECTED" >> /tmp/body.md
@@ -134,7 +147,7 @@ jobs:
           fi
           git config user.name "$SLUG[bot]"
           git config user.email "$SLUG[bot]@users.noreply.github.com"
-          git commit -m "[maintenance] fix attempt $((ATTEMPTS + 1))"
+          git commit -m "[maintenance] $MODE attempt $((ATTEMPTS + 1))"
           git push "https://x-access-token:$TOKEN@github.com/${GITHUB_REPOSITORY}.git" "HEAD:$BRANCH"
           gh pr comment "$PR" --body-file /tmp/body.md
           gh pr edit "$PR" --add-label ai-modified

@@ -1,6 +1,6 @@
 ##### RELEASE #####
 # Git-first release of the version Cargo.toml declares (a human bumps it, with its CHANGELOG section, in a PR):
-# tag vX.Y.Z on main, GitHub release with generated notes, then the image — ghcr.io/<owner>/gliner — once the
+# tag vX.Y.Z on main, GitHub release with generated notes, then the image — ghcr.io/<owner>/gliner:X.Y.Z and :latest — once the
 # PUBLISH_IMAGE gate is on (.github/ci.vars.example). Manual: nothing is released by a merge.
 name: release
 
@@ -74,7 +74,6 @@ jobs:
           images: ghcr.io/${{ github.repository_owner }}/gliner
           tags: |
             type=semver,pattern={{version}},value=v${{ needs.tag.outputs.version }}
-            type=semver,pattern={{major}}.{{minor}},value=v${{ needs.tag.outputs.version }}
             type=raw,value=latest
           labels: |
             org.opencontainers.image.title=gliner
@@ -86,3 +85,5 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
