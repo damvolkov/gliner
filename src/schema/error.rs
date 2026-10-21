@@ -21,3 +21,16 @@ pub enum RecognizerError {
     #[error("inference worker stopped: {0}")]
     Worker(String),
 }
+
+/// Why a line of a dataset or an eval set is refused.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+pub enum ExampleError {
+    #[error("not a {{text, entities}} object: {0}")]
+    Json(String),
+    #[error("entity {index}: {start}..{end} is empty or reversed")]
+    Empty { index: usize, start: usize, end: usize },
+    #[error("entity {index}: end {end} is past the text ({chars} characters)")]
+    Past { index: usize, end: usize, chars: usize },
+    #[error("entity {0}: the label is blank")]
+    Blank(usize),
+}
