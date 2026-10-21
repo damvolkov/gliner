@@ -20,6 +20,6 @@ pub async fn ner(
         request.labels.into(),
         request.threshold.unwrap_or(state.defaults.threshold),
     )?;
-    let entities = state.ready()?.predict(request.text, query).await?;
+    let entities = state.ready()?.executor.predict(request.text, query).await?;
     Ok(Json(NerResponse { entities }))
 }

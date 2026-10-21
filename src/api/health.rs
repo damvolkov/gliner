@@ -12,7 +12,7 @@ pub async fn health() -> Json<Value> {
 
 /// Readiness: 200 once the model is loaded and predictions are served, 503 before.
 pub async fn ready(State(state): State<AppState>) -> (StatusCode, Json<Value>) {
-    match state.executor.get() {
+    match state.slot.get() {
         Some(_) => (StatusCode::OK, Json(json!({ "status": "ready" }))),
         None => (StatusCode::SERVICE_UNAVAILABLE, Json(json!({ "status": "loading" }))),
     }

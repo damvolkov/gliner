@@ -33,7 +33,7 @@ async fn test_ready_and_models_follow_the_load() {
         call(&ready, "GET", "/models", "").await,
         (
             StatusCode::OK,
-            json!({"model": "fake", "version": "0123456789abcdef", "labels_cached": 0})
+            json!({"model": "fake", "version": "0123456789abcdef", "labels_cached": 0, "served": 1})
         )
     );
 }

@@ -50,6 +50,7 @@ impl Recognizer for FakeRecognizer {
             model: "fake".to_owned(),
             version: "0123456789abcdef".to_owned(),
             labels_cached: self.calls.load(Ordering::SeqCst),
+            served: None,
         }
     }
 }

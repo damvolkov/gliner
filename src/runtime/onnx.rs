@@ -292,6 +292,7 @@ impl Recognizer for OnnxRuntime {
             model: self.model.clone(),
             version: self.version.clone(),
             labels_cached: self.cache.len(),
+            served: None,
         }
     }
 }

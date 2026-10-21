@@ -5,7 +5,7 @@ use crate::api::error::ApiError;
 use crate::api::state::AppState;
 use crate::schema::card::ModelCard;
 
-/// The served model id, the version of its files, and the label embeddings cached.
+/// The served model id, the version of its files, the label embeddings cached, and the registry version served.
 ///
 /// # Errors
 /// The model is not loaded yet.

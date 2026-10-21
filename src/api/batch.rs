@@ -70,7 +70,8 @@ impl Decoder for CodecBatch {
 
 /// The NDJSON pipeline of one `/ner/batch` request: lines framed as they arrive, at most `concurrency` items
 /// in flight (the body is read no faster than items complete), replies written as each finishes. Dropping the
-/// stream (client gone) drops every pending item; shutdown ends it after the items in flight.
+/// stream (client gone) drops every pending item; shutdown ends it after the items in flight. The whole stream
+/// runs on the model served when it opened, even if another is promoted meanwhile.
 #[derive(Debug)]
 pub struct StreamBatch {
     executor: BoundedExecutor,
@@ -176,7 +177,7 @@ impl StreamBatch {
 /// # Errors
 /// The model is not loaded yet (503).
 pub async fn batch(State(state): State<AppState>, body: Body) -> Result<Response, ApiError> {
-    let stream = StreamBatch::new(state.ready()?.clone(), &state).run(body);
+    let stream = StreamBatch::new(state.ready()?.executor, &state).run(body);
     Ok((
         [(CONTENT_TYPE, NDJSON)],
         Body::from_stream(stream.map(Ok::<_, Infallible>)),

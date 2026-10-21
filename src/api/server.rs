@@ -16,7 +16,7 @@ use crate::api::state::AppState;
 use crate::config::model::ModelConfig;
 use crate::core::settings::Settings;
 use crate::runtime::artifact::{ArtifactError, ModelArtifact};
-use crate::runtime::executor::BoundedExecutor;
+use crate::runtime::executor::{BoundedExecutor, ServedExecutor};
 use crate::runtime::onnx::{OnnxError, OnnxRuntime};
 use crate::runtime::registry::{ModelRegistry, RegistryError};
 use crate::schema::error::RequestError;
@@ -64,7 +64,12 @@ impl HttpServer {
         shutdown.cancel();
     }
 
-    async fn serve_load(artifact: ModelArtifact, config: ModelConfig, state: AppState) -> Result<(), ServerError> {
+    async fn serve_load(
+        version: u32,
+        artifact: ModelArtifact,
+        config: ModelConfig,
+        state: AppState,
+    ) -> Result<(), ServerError> {
         let concurrency = config.concurrency;
         let loaded = tokio::task::spawn_blocking(move || OnnxRuntime::load(&artifact, &config))
             .await
@@ -72,10 +77,11 @@ impl HttpServer {
             .and_then(|loaded| loaded.map_err(ServerError::from));
         match loaded {
             Ok(runtime) => {
-                state
-                    .executor
-                    .get_or_init(|| BoundedExecutor::new(Arc::new(runtime), concurrency));
-                tracing::info!("server.ready");
+                state.slot.set(ServedExecutor {
+                    version,
+                    executor: BoundedExecutor::new(Arc::new(runtime), concurrency),
+                });
+                tracing::info!(version, "server.ready");
                 Ok(())
             }
             Err(error) => {
@@ -115,7 +121,7 @@ impl HttpServer {
         let app = axum::serve(listener, Self::router(state.clone()))
             .with_graceful_shutdown(Self::serve_signal(state.shutdown.clone()))
             .into_future();
-        let load = Self::serve_load(artifact, settings.model.clone(), state);
+        let load = Self::serve_load(version, artifact, settings.model.clone(), state);
         let (served, loaded) = tokio::join!(app, load);
         served?;
         loaded

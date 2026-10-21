@@ -6,7 +6,7 @@ use axum::http::{Request, StatusCode};
 use gliner::api::server::HttpServer;
 use gliner::api::state::AppState;
 use gliner::core::settings::Settings;
-use gliner::runtime::executor::BoundedExecutor;
+use gliner::runtime::executor::{BoundedExecutor, ServedExecutor};
 use http_body_util::BodyExt;
 use serde_json::Value;
 use tower::ServiceExt;
@@ -25,10 +25,10 @@ pub fn state(concurrency: usize) -> AppState {
 pub fn loaded(concurrency: usize) -> (AppState, Arc<FakeRecognizer>) {
     let state = state(concurrency);
     let fake = Arc::new(FakeRecognizer::default());
-    state
-        .executor
-        .set(BoundedExecutor::new(fake.clone(), concurrency))
-        .unwrap();
+    state.slot.set(ServedExecutor {
+        version: 1,
+        executor: BoundedExecutor::new(fake.clone(), concurrency),
+    });
     (state, fake)
 }
 
