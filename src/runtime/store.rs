@@ -93,6 +93,49 @@ impl DataStore {
         }
     }
 
+    async fn common_card(path: &Path, file: File, name: &str) -> Result<CardDataset, StoreError> {
+        let io = Self::common_io(path);
+        let mut reader = BufReader::new(file);
+        let (mut lines, mut hasher) = (0_usize, Sha256::new());
+        loop {
+            let chunk = reader.fill_buf().await.map_err(&io)?;
+            if chunk.is_empty() {
+                break;
+            }
+            hasher.update(chunk);
+            lines = lines.saturating_add(memchr::memchr_iter(b'\n', chunk).count());
+            let read = chunk.len();
+            reader.consume(read);
+        }
+        Ok(CardDataset {
+            name: name.to_owned(),
+            lines,
+            sha256: format!("{:x}", hasher.finalize()),
+        })
+    }
+
+    async fn common_scan<T, C: Default + Extend<T>>(
+        &self,
+        file: File,
+        mut map: impl FnMut(LineDataset) -> T,
+    ) -> Result<C, StoreError> {
+        let mut framed = FramedRead::new(file, LinesCodec::new_with_max_length(self.line)).enumerate();
+        let mut collected = C::default();
+        while let Some((index, line)) = framed.next().await {
+            let number = index.saturating_add(1);
+            let line = line.map_err(|error| self.common_line(number, error))?;
+            if line.trim().is_empty() {
+                continue;
+            }
+            let parsed = Example::parse(&line).map_err(|error| StoreError::Line {
+                line: number,
+                reason: error.to_string(),
+            })?;
+            collected.extend(std::iter::once(map(parsed)));
+        }
+        Ok(collected)
+    }
+
     // ----------------------------------------------------------
 
     // ##### PUBLIC #####
@@ -170,24 +213,18 @@ impl DataStore {
     /// An invalid name, a missing set, or a read failure.
     pub async fn card(&self, kind: KindStore, name: &str) -> Result<CardDataset, StoreError> {
         let (path, file) = self.common_open(kind, name).await?;
-        let io = Self::common_io(&path);
-        let mut reader = BufReader::new(file);
-        let (mut lines, mut hasher) = (0_usize, Sha256::new());
-        loop {
-            let chunk = reader.fill_buf().await.map_err(&io)?;
-            if chunk.is_empty() {
-                break;
-            }
-            hasher.update(chunk);
-            lines = lines.saturating_add(memchr::memchr_iter(b'\n', chunk).count());
-            let read = chunk.len();
-            reader.consume(read);
-        }
-        Ok(CardDataset {
-            name: name.to_owned(),
-            lines,
-            sha256: format!("{:x}", hasher.finalize()),
-        })
+        Self::common_card(&path, file, name).await
+    }
+
+    /// Copies a set to `to`, so a job reads one version of it however often it is replaced; the copy's card.
+    ///
+    /// # Errors
+    /// An invalid name, a missing set, or a copy failure.
+    pub async fn copy(&self, kind: KindStore, name: &str, to: &Path) -> Result<CardDataset, StoreError> {
+        let (path, _) = self.common_open(kind, name).await?;
+        tokio::fs::copy(&path, to).await.map_err(Self::common_io(to))?;
+        let file = File::open(to).await.map_err(Self::common_io(to))?;
+        Self::common_card(to, file, name).await
     }
 
     /// Every set of a kind, by name.
@@ -220,24 +257,23 @@ impl DataStore {
         &self,
         kind: KindStore,
         name: &str,
-        mut map: impl FnMut(LineDataset) -> T,
+        map: impl FnMut(LineDataset) -> T,
     ) -> Result<C, StoreError> {
         let (_, file) = self.common_open(kind, name).await?;
-        let mut framed = FramedRead::new(file, LinesCodec::new_with_max_length(self.line)).enumerate();
-        let mut collected = C::default();
-        while let Some((index, line)) = framed.next().await {
-            let number = index.saturating_add(1);
-            let line = line.map_err(|error| self.common_line(number, error))?;
-            if line.trim().is_empty() {
-                continue;
-            }
-            let parsed = Example::parse(&line).map_err(|error| StoreError::Line {
-                line: number,
-                reason: error.to_string(),
-            })?;
-            collected.extend(std::iter::once(map(parsed)));
-        }
-        Ok(collected)
+        self.common_scan(file, map).await
+    }
+
+    /// [`Self::read`] over any file in the format, such as a [`Self::copy`].
+    ///
+    /// # Errors
+    /// An unreadable file, or a line that does not parse.
+    pub async fn scan<T, C: Default + Extend<T>>(
+        &self,
+        path: &Path,
+        map: impl FnMut(LineDataset) -> T,
+    ) -> Result<C, StoreError> {
+        let file = File::open(path).await.map_err(Self::common_io(path))?;
+        self.common_scan(file, map).await
     }
 }
 
@@ -361,6 +397,34 @@ mod tests {
                 .read::<LineDataset, Vec<_>>(KindStore::Evals, "zz", |line| line)
                 .await,
             Err(StoreError::Missing { .. })
+        ));
+    }
+
+    #[tokio::test]
+    async fn test_copy_snapshots_a_set_then_scan_reads_it() {
+        let (root, store) = store();
+        let card = store.put(KindStore::Datasets, "web", GOOD.as_bytes()).await.unwrap();
+        let snapshot = root.path().join("snapshot.jsonl");
+        assert_eq!(store.copy(KindStore::Datasets, "web", &snapshot).await.unwrap(), card);
+        store
+            .put(
+                KindStore::Datasets,
+                "web",
+                "{\"text\": \"x\", \"entities\": []}\n".as_bytes(),
+            )
+            .await
+            .unwrap();
+        let lines: Vec<LineDataset> = store.scan(&snapshot, |line| line).await.unwrap();
+        assert_eq!(lines.len(), 2, "the snapshot kept the old set");
+        assert!(matches!(
+            store.copy(KindStore::Datasets, "absent", &snapshot).await,
+            Err(StoreError::Missing { .. })
+        ));
+        assert!(matches!(
+            store
+                .scan::<LineDataset, Vec<_>>(&root.path().join("absent"), |line| line)
+                .await,
+            Err(StoreError::Io { .. })
         ));
     }
 

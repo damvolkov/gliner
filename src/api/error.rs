@@ -42,6 +42,7 @@ impl ApiError {
             JobError::Toolchain(_)
             | JobError::Unvalidated
             | JobError::Leakage(_)
+            | JobError::Changed(_)
             | JobError::Candidate(_)
             | JobError::Parity { .. }
             | JobError::File { .. } => StatusCode::INTERNAL_SERVER_ERROR,

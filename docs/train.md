@@ -84,7 +84,7 @@ at a time (`409`).
 
 | Step | Does | Fails the job when |
 |---|---|---|
-| `leakage` | fingerprints every dataset text (casefolded, whitespace collapsed, sha256) | no eval set is registered, or any eval text is a dataset text |
+| `leakage` | snapshots the dataset into the job's scratch dir (it trains on that copy, whatever `PUT` comes later) and fingerprints every text (casefolded, whitespace collapsed, sha256) | no eval set is registered, the dataset changed since the job started, or any eval text is a dataset text |
 | `train` | `tools/train` from the base version's `checkpoint/`, or its hub id for version 1; the log streams into the job | the trainer fails |
 | `export` | `tools/export` the checkpoint into the candidate dir, loaded by the Rust runtime | the export fails or does not load |
 | `parity` | PyTorch's predictions on every eval text against the runtime's: Jaccard over `(text, start, end, label)` | parity < `train.parity` (0.99) |

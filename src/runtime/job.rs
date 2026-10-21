@@ -39,6 +39,8 @@ pub enum JobError {
     Unvalidated,
     #[error("leakage: {0}")]
     Leakage(String),
+    #[error("dataset {0} was replaced since the job started: start it again")]
+    Changed(String),
     #[error("the candidate does not load: {0}")]
     Candidate(String),
     #[error("parity {parity:.4} is below {min}: the export does not reproduce PyTorch")]
@@ -117,7 +119,12 @@ impl TrainJob {
         Ok(self.lab.toolchain.run(&call, &log).await?)
     }
 
-    /// Every eval set, read, once no dataset text appears in any of them.
+    /// The dataset as the job started with it: checked, fingerprinted and trained on, whatever `PUT` comes later.
+    fn run_snapshot(&self) -> PathBuf {
+        self.staging.join("dataset.jsonl")
+    }
+
+    /// Every eval set, read, once no text of the dataset's snapshot appears in any of them.
     async fn run_leakage(&self) -> Result<BTreeMap<String, Vec<LineDataset>>, JobError> {
         self.common_step(StepTrain::Leakage);
         let store = &self.lab.store;
@@ -131,10 +138,22 @@ impl TrainJob {
                 .map_err(LabError::from)?;
             evals.insert(card.name, lines);
         }
+        tokio::fs::create_dir_all(&self.staging)
+            .await
+            .map_err(|error| JobError::File {
+                path: self.staging.clone(),
+                reason: error.to_string(),
+            })?;
+        let snapshot = self.run_snapshot();
+        let copied = store
+            .copy(KindStore::Datasets, &self.dataset.name, &snapshot)
+            .await
+            .map_err(LabError::from)?;
+        (copied.sha256 == self.dataset.sha256)
+            .then_some(())
+            .ok_or_else(|| JobError::Changed(self.dataset.name.clone()))?;
         let seen: HashSet<[u8; 32]> = store
-            .read(KindStore::Datasets, &self.dataset.name, |line| {
-                Example::fingerprint(&line.text)
-            })
+            .scan(&snapshot, |line| Example::fingerprint(&line.text))
             .await
             .map_err(LabError::from)?;
         let leaks = Example::leaks(&seen, &evals);
@@ -153,21 +172,9 @@ impl TrainJob {
 
     async fn run_train(&self, checkpoint: &Path) -> Result<(), JobError> {
         self.common_step(StepTrain::Train);
-        tokio::fs::create_dir_all(&self.staging)
-            .await
-            .map_err(|error| JobError::File {
-                path: self.staging.clone(),
-                reason: error.to_string(),
-            })?;
-        let base = self.lab.registry.source(self.base)?;
-        let dataset = self
-            .lab
-            .store
-            .path(KindStore::Datasets, &self.dataset.name)
-            .map_err(LabError::from)?;
         self.run_tool(CallToolchain::Train {
-            base,
-            dataset,
+            base: self.lab.registry.source(self.base)?,
+            dataset: self.run_snapshot(),
             out: checkpoint.to_owned(),
             params: self.request.params.clone(),
         })
