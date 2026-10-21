@@ -125,6 +125,7 @@ dependencies = [
     { name = "gliner", extra = ["training"] },
     { name = "torch", version = "2.14.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "sys_platform == 'darwin'" },
     { name = "torch", version = "2.14.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "sys_platform != 'darwin'" },
+    { name = "transformers" },
 ]
 
 [package.dev-dependencies]
@@ -136,6 +137,7 @@ dev = [
 requires-dist = [
     { name = "gliner", extras = ["training"], specifier = "==0.2.29" },
     { name = "torch", specifier = ">=2.9", index = "https://download.pytorch.org/whl/cpu" },
+    { name = "transformers", specifier = ">=5.16.1" },
 ]
 
 [package.metadata.requires-dev]
