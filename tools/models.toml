@@ -1,0 +1,32 @@
+# Model watch (tools/models.py, .github/workflows/models.yml): GLiNER-family NER models newer than the served base.
+# A track is a Hub search (any /api/models query parameter) plus an optional download floor.
+# `ignore` holds ids or globs a human already triaged; a candidate listed there never reappears.
+
+base = "knowledgator/gliner-bi-base-v2.0"
+licenses = ["apache-2.0", "mit"]
+ignore = []
+
+[[track]]
+author = "knowledgator"
+search = "gliner-bi"
+
+[[track]]
+author = "knowledgator"
+search = "gliner-x"
+
+[[track]]
+author = "urchade"
+search = "gliner"
+
+[[track]]
+author = "fastino"
+search = "gliner2"
+
+[[track]]
+author = "numind"
+search = "NuNER"
+
+### Every model tagged gliner: hundreds of domain fine-tunes, so only the widely used ones.
+[[track]]
+filter = "gliner"
+min_downloads = 10000

@@ -1,0 +1,89 @@
+##### RELEASE #####
+# Git-first release of the version Cargo.toml declares (a human bumps it, with its CHANGELOG section, in a PR):
+# tag vX.Y.Z on main, GitHub release with generated notes, then the image — ghcr.io/<owner>/gliner:X.Y.Z and :latest — once the
+# PUBLISH_IMAGE gate is on (.github/ci.vars.example). Manual: nothing is released by a merge.
+name: release
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    name: tag + release
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    outputs:
+      ref: ${{ steps.tag.outputs.ref }}
+      version: ${{ steps.tag.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - id: tag
+        name: tag the Cargo.toml version, open the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version="$(python3 -c 'import tomllib; print(tomllib.load(open("Cargo.toml", "rb"))["package"]["version"])')"
+          if git rev-parse -q --verify "refs/tags/v${version}" >/dev/null; then
+            echo "::error::v${version} is already released; bump Cargo.toml first" >&2
+            exit 1
+          fi
+          last="$(git tag -l 'v*' --sort=-v:refname | head -1)"
+          git tag "v${version}"
+          auth="AUTHORIZATION: basic $(printf '%s:%s' 'x-access-token' "$GH_TOKEN" | base64 -w0)"
+          git -c "http.https://github.com/.extraheader=${auth}" push origin "v${version}"
+          notes=("--generate-notes")
+          [ -n "$last" ] && notes+=("--notes-start-tag" "$last")
+          gh release create "v${version}" --title "gliner ${version}" --latest --verify-tag "${notes[@]}"
+          echo "ref=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+  image:
+    name: image · ghcr.io
+    if: vars.PUBLISH_IMAGE == 'true'
+    needs: tag
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.tag.outputs.ref }}
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/gliner
+          tags: |
+            type=semver,pattern={{version}},value=v${{ needs.tag.outputs.version }}
+            type=raw,value=latest
+          labels: |
+            org.opencontainers.image.title=gliner
+            org.opencontainers.image.description=GLiNER bi-encoder inference service: zero-shot named entities over HTTP, CPU-first, ONNX Runtime
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: docker/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

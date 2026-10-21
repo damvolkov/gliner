@@ -1,0 +1,142 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard"
+  ],
+  "enabledManagers": [
+    "cargo",
+    "pep621",
+    "github-actions",
+    "dockerfile",
+    "rust-toolchain"
+  ],
+  "schedule": [
+    "before 6am on monday"
+  ],
+  "timezone": "Europe/Madrid",
+  "prConcurrentLimit": 3,
+  "abandonmentThreshold": "1 year",
+  "rangeStrategy": "bump",
+  "lockFileMaintenance": {
+    "enabled": false
+  },
+  "packageRules": [
+    {
+      "description": "The inference engine: one PR per release, at once. ort pins the ONNX Runtime it downloads and links (download-binaries, api-NN), so an ort release is the runtime's. sync.yml records it in the changelog, upstream-context diffs its public API, maintenance.yml repairs; parity is re-checked by hand (make backends).",
+      "matchManagers": [
+        "cargo"
+      ],
+      "matchPackageNames": [
+        "ort",
+        "tokenizers"
+      ],
+      "schedule": [
+        "at any time"
+      ],
+      "labels": [
+        "upstream-update"
+      ],
+      "commitMessagePrefix": "engine:",
+      "automerge": false
+    },
+    {
+      "description": "The rest of the Rust tree: one weekly PR.",
+      "matchManagers": [
+        "cargo"
+      ],
+      "matchPackageNames": [
+        "!ort",
+        "!tokenizers"
+      ],
+      "groupName": "rust dependencies",
+      "labels": [
+        "tooling"
+      ]
+    },
+    {
+      "description": "The GLiNER library the tools export and train with: its own PR; a bump means re-exporting and re-checking parity.",
+      "matchManagers": [
+        "pep621"
+      ],
+      "matchPackageNames": [
+        "gliner"
+      ],
+      "labels": [
+        "upstream-update"
+      ],
+      "automerge": false
+    },
+    {
+      "description": "The rest of the tools' uv projects (torch, onnx, onnxruntime, transformers, ruff, pytest): one weekly PR; the lockfiles follow in sync.yml.",
+      "matchManagers": [
+        "pep621"
+      ],
+      "matchPackageNames": [
+        "!gliner"
+      ],
+      "groupName": "python tooling",
+      "labels": [
+        "tooling"
+      ]
+    },
+    {
+      "description": "requires-python is a support promise, not a dependency: never bumped by a bot.",
+      "matchDepTypes": [
+        "requires-python"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Build and runtime images stay pinned by digest; one monthly PR.",
+      "matchManagers": [
+        "dockerfile"
+      ],
+      "groupName": "docker images",
+      "pinDigests": true,
+      "schedule": [
+        "before 6am on the first day of the month"
+      ],
+      "labels": [
+        "tooling"
+      ]
+    },
+    {
+      "description": "cargo-chef tags carry the Rust minor (latest-rust-1.94-slim-trixie): it moves with rust-toolchain.toml's channel, in one PR.",
+      "matchPackageNames": [
+        "rust",
+        "lukemathwalker/cargo-chef"
+      ],
+      "groupName": "rust toolchain",
+      "schedule": [
+        "at any time"
+      ],
+      "labels": [
+        "tooling"
+      ]
+    },
+    {
+      "matchManagers": [
+        "dockerfile"
+      ],
+      "matchPackageNames": [
+        "lukemathwalker/cargo-chef"
+      ],
+      "versioning": "regex:^latest-rust-(?<major>\\d+)\\.(?<minor>\\d+)-slim-trixie$"
+    },
+    {
+      "description": "Workflow actions stay pinned by digest; one monthly PR.",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "groupName": "github actions",
+      "pinDigests": true,
+      "schedule": [
+        "before 6am on the first day of the month"
+      ],
+      "labels": [
+        "tooling"
+      ]
+    }
+  ]
+}

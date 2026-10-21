@@ -1,0 +1,51 @@
+# Configuration file for `prek`, a git hook framework written in Rust.
+# See https://prek.j178.dev for more information.
+#:schema https://www.schemastore.org/prek.json
+
+default_install_hook_types = ["pre-commit", "pre-push"]
+exclude = '^(tests/resources/|THIRD_PARTY_LICENSES\.md$)'
+
+##### HYGIENE #####
+
+[[repos]]
+repo = "builtin"
+hooks = [
+  { id = "trailing-whitespace" },
+  { id = "end-of-file-fixer" },
+  { id = "mixed-line-ending" },
+  { id = "check-merge-conflict" },
+  { id = "check-toml" },
+  { id = "check-yaml" },
+  { id = "check-json" },
+  { id = "check-added-large-files" },
+  { id = "detect-private-key" },
+]
+
+##### RUST · PYTHON · WORKFLOWS #####
+
+[[repos]]
+repo = "local"
+hooks = [
+  { id = "lint", name = "rustfmt + clippy (warnings are errors)", entry = "make -s lint", language = "system", types_or = ["rust", "toml"], pass_filenames = false },
+  { id = "bounds", name = "layer boundaries", entry = "make -s bounds", language = "system", types = ["rust"], pass_filenames = false },
+  { id = "test", name = "unit and integration tests (model-free)", entry = "make -s test ARGS=--quiet", language = "system", types_or = ["rust", "toml", "json"], pass_filenames = false },
+  { id = "gates", name = "workflow gates declared and disabled", entry = "make -s gates", language = "system", files = '^\.github/', pass_filenames = false },
+  { id = "licenses", name = "third-party licenses match Cargo.lock", entry = "bash -c 'make -s licenses && git diff --exit-code THIRD_PARTY_LICENSES.md'", language = "system", files = '^(Cargo\.(toml|lock)|about\.(toml|hbs))$', pass_filenames = false },
+  { id = "ruff", name = "ruff check (tools/export)", entry = "uv run -q --project tools/export --only-group dev ruff check --fix --exit-non-zero-on-fix tools/export", language = "system", types_or = ["python", "pyi"], pass_filenames = false },
+  { id = "ruff-format", name = "ruff format (tools/export)", entry = "uv run -q --project tools/export --only-group dev ruff format tools/export", language = "system", types_or = ["python", "pyi"], pass_filenames = false },
+  { id = "ruff-train", name = "ruff check (tools/train)", entry = "uv run -q --project tools/train --only-group dev ruff check --fix --exit-non-zero-on-fix tools/train", language = "system", types_or = ["python", "pyi"], pass_filenames = false },
+  { id = "ruff-format-train", name = "ruff format (tools/train)", entry = "uv run -q --project tools/train --only-group dev ruff format tools/train", language = "system", types_or = ["python", "pyi"], pass_filenames = false },
+  { id = "pytest-maintain", name = "ruff + tests of the maintenance tools (offline)", entry = "make -s pytest", language = "system", files = '^(tools/[a-z]+\.(py|toml)|tests/tools/)', pass_filenames = false },
+  { id = "shellcheck", name = "shellcheck", entry = "uvx --from shellcheck-py==0.11.0.1 shellcheck", language = "system", types = ["shell"] },
+  { id = "zizmor", name = "workflow hardening scan", entry = "uvx zizmor==1.30.1 --persona=regular .github/workflows", language = "system", files = '^\.github/workflows/.*\.ya?ml$', pass_filenames = false },
+  { id = "coverage", name = "coverage ≥ 90% (model-free tests)", entry = "make -s coverage", language = "system", always_run = true, pass_filenames = false, stages = ["pre-push"] },
+]
+
+##### SECRETS #####
+
+[[repos]]
+repo = "https://github.com/gitleaks/gitleaks"
+rev = "v8.30.1"
+hooks = [
+  { id = "gitleaks" },
+]

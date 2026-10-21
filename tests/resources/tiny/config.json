@@ -1,0 +1,8 @@
+{
+  "max_width": 12,
+  "max_len": 6,
+  "words_splitter_type": "whitespace",
+  "subtoken_pooling": "first",
+  "span_mode": "markerV0",
+  "labels_max_len": 8
+}

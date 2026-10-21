@@ -1,0 +1,671 @@
+{
+ "model": "knowledgator/gliner-bi-base-v2.0",
+ "labels": [
+  "service",
+  "software library",
+  "software tool",
+  "protocol or standard",
+  "machine learning model",
+  "person",
+  "organization",
+  "location"
+ ],
+ "threshold": 0.5,
+ "items": [
+  {
+   "id": "t01",
+   "text": "Marie Curie nació en Varsovia y trabajó en la Universidad de París, donde ganó dos premios Nobel.",
+   "entities": [
+    {
+     "start": 0,
+     "end": 11,
+     "text": "Marie Curie",
+     "label": "person",
+     "score": 0.6813758015632629
+    },
+    {
+     "start": 21,
+     "end": 29,
+     "text": "Varsovia",
+     "label": "location",
+     "score": 0.7084072232246399
+    },
+    {
+     "start": 46,
+     "end": 66,
+     "text": "Universidad de París",
+     "label": "organization",
+     "score": 0.6415231227874756
+    }
+   ]
+  },
+  {
+   "id": "t02",
+   "text": "El equipo despliega PostgreSQL detrás de Nginx en un clúster de Kubernetes alojado en Frankfurt.",
+   "entities": [
+    {
+     "start": 20,
+     "end": 30,
+     "text": "PostgreSQL",
+     "label": "software library",
+     "score": 0.5613337755203247
+    },
+    {
+     "start": 41,
+     "end": 46,
+     "text": "Nginx",
+     "label": "software tool",
+     "score": 0.6792296767234802
+    },
+    {
+     "start": 64,
+     "end": 74,
+     "text": "Kubernetes",
+     "label": "machine learning model",
+     "score": 0.5134290456771851
+    },
+    {
+     "start": 86,
+     "end": 95,
+     "text": "Frankfurt",
+     "label": "location",
+     "score": 0.6096036434173584
+    }
+   ]
+  },
+  {
+   "id": "t03",
+   "text": "Ada Lovelace wrote the first algorithm intended for Charles Babbage's Analytical Engine in London.",
+   "entities": [
+    {
+     "start": 0,
+     "end": 12,
+     "text": "Ada Lovelace",
+     "label": "person",
+     "score": 0.7171752452850342
+    },
+    {
+     "start": 52,
+     "end": 67,
+     "text": "Charles Babbage",
+     "label": "person",
+     "score": 0.6305807828903198
+    },
+    {
+     "start": 91,
+     "end": 97,
+     "text": "London",
+     "label": "location",
+     "score": 0.6505146026611328
+    }
+   ]
+  },
+  {
+   "id": "t04",
+   "text": "La biblioteca NumPy y la herramienta Docker aparecen en casi todos los proyectos de Python del grupo.",
+   "entities": [
+    {
+     "start": 14,
+     "end": 19,
+     "text": "NumPy",
+     "label": "software library",
+     "score": 0.7707939743995667
+    },
+    {
+     "start": 37,
+     "end": 43,
+     "text": "Docker",
+     "label": "software tool",
+     "score": 0.7369982004165649
+    }
+   ]
+  },
+  {
+   "id": "t05",
+   "text": "Mistral AI publicó un modelo de lenguaje en París; Hugging Face lo distribuye bajo licencia Apache 2.0.",
+   "entities": [
+    {
+     "start": 0,
+     "end": 10,
+     "text": "Mistral AI",
+     "label": "organization",
+     "score": 0.644451916217804
+    },
+    {
+     "start": 44,
+     "end": 49,
+     "text": "París",
+     "label": "location",
+     "score": 0.5874765515327454
+    },
+    {
+     "start": 51,
+     "end": 63,
+     "text": "Hugging Face",
+     "label": "organization",
+     "score": 0.5646714568138123
+    }
+   ]
+  },
+  {
+   "id": "t06",
+   "text": "The service speaks HTTP/2 and gRPC, stores blobs in Amazon S3 and sends alerts through Slack.",
+   "entities": [
+    {
+     "start": 19,
+     "end": 25,
+     "text": "HTTP/2",
+     "label": "protocol or standard",
+     "score": 0.7356773614883423
+    },
+    {
+     "start": 30,
+     "end": 34,
+     "text": "gRPC",
+     "label": "protocol or standard",
+     "score": 0.7508175373077393
+    },
+    {
+     "start": 52,
+     "end": 61,
+     "text": "Amazon S3",
+     "label": "service",
+     "score": 0.5352277755737305
+    },
+    {
+     "start": 87,
+     "end": 92,
+     "text": "Slack",
+     "label": "software tool",
+     "score": 0.6819630265235901
+    }
+   ]
+  },
+  {
+   "id": "t07",
+   "text": "José Saramago vivió en Lanzarote 🌋 durante sus últimos años y escribió allí varios ensayos.",
+   "entities": [
+    {
+     "start": 0,
+     "end": 13,
+     "text": "José Saramago",
+     "label": "person",
+     "score": 0.7125325202941895
+    },
+    {
+     "start": 23,
+     "end": 32,
+     "text": "Lanzarote",
+     "label": "location",
+     "score": 0.7348030209541321
+    }
+   ]
+  },
+  {
+   "id": "t08",
+   "text": "Según la Organización Mundial de la Salud, la campaña llegará a Bogotá, Lima y Quito en marzo.",
+   "entities": [
+    {
+     "start": 9,
+     "end": 41,
+     "text": "Organización Mundial de la Salud",
+     "label": "organization",
+     "score": 0.7669001817703247
+    },
+    {
+     "start": 72,
+     "end": 76,
+     "text": "Lima",
+     "label": "location",
+     "score": 0.5315008163452148
+    },
+    {
+     "start": 79,
+     "end": 84,
+     "text": "Quito",
+     "label": "location",
+     "score": 0.5325615406036377
+    }
+   ]
+  },
+  {
+   "id": "t09",
+   "text": "Linus Torvalds created Linux at the University of Helsinki and later started Git for the kernel team.",
+   "entities": [
+    {
+     "start": 0,
+     "end": 14,
+     "text": "Linus Torvalds",
+     "label": "person",
+     "score": 0.7159222364425659
+    },
+    {
+     "start": 36,
+     "end": 58,
+     "text": "University of Helsinki",
+     "label": "organization",
+     "score": 0.655241847038269
+    },
+    {
+     "start": 77,
+     "end": 80,
+     "text": "Git",
+     "label": "software tool",
+     "score": 0.8443021774291992
+    }
+   ]
+  },
+  {
+   "id": "t10",
+   "text": "El protocolo OAuth 2.0 y el estándar JSON Web Token protegen la API pública de la empresa.",
+   "entities": [
+    {
+     "start": 13,
+     "end": 22,
+     "text": "OAuth 2.0",
+     "label": "protocol or standard",
+     "score": 0.7296501994132996
+    },
+    {
+     "start": 37,
+     "end": 51,
+     "text": "JSON Web Token",
+     "label": "protocol or standard",
+     "score": 0.501537024974823
+    }
+   ]
+  },
+  {
+   "id": "t11",
+   "text": "Gabriel García Márquez recibió el premio en Estocolmo y regresó después a Ciudad de México.",
+   "entities": [
+    {
+     "start": 0,
+     "end": 22,
+     "text": "Gabriel García Márquez",
+     "label": "person",
+     "score": 0.7079187035560608
+    },
+    {
+     "start": 74,
+     "end": 90,
+     "text": "Ciudad de México",
+     "label": "location",
+     "score": 0.6737170815467834
+    }
+   ]
+  },
+  {
+   "id": "t12",
+   "text": "We fine-tuned BERT with PyTorch on a single GPU, then served it with ONNX Runtime on Ubuntu.",
+   "entities": [
+    {
+     "start": 14,
+     "end": 18,
+     "text": "BERT",
+     "label": "machine learning model",
+     "score": 0.8025067448616028
+    },
+    {
+     "start": 24,
+     "end": 31,
+     "text": "PyTorch",
+     "label": "software tool",
+     "score": 0.7946897149085999
+    },
+    {
+     "start": 69,
+     "end": 81,
+     "text": "ONNX Runtime",
+     "label": "software tool",
+     "score": 0.6440304517745972
+    }
+   ]
+  },
+  {
+   "id": "t13",
+   "text": "La Agencia Espacial Europea lanzó el satélite desde Kourou con un cohete Ariane 6 🚀.",
+   "entities": [
+    {
+     "start": 0,
+     "end": 27,
+     "text": "La Agencia Espacial Europea",
+     "label": "organization",
+     "score": 0.6743282079696655
+    },
+    {
+     "start": 52,
+     "end": 58,
+     "text": "Kourou",
+     "label": "location",
+     "score": 0.7219269275665283
+    }
+   ]
+  },
+  {
+   "id": "t14",
+   "text": "Grace Hopper worked for the United States Navy and helped design COBOL at Remington Rand.",
+   "entities": [
+    {
+     "start": 0,
+     "end": 12,
+     "text": "Grace Hopper",
+     "label": "person",
+     "score": 0.7010047435760498
+    },
+    {
+     "start": 28,
+     "end": 46,
+     "text": "United States Navy",
+     "label": "organization",
+     "score": 0.755129337310791
+    },
+    {
+     "start": 65,
+     "end": 70,
+     "text": "COBOL",
+     "label": "software tool",
+     "score": 0.557338535785675
+    },
+    {
+     "start": 74,
+     "end": 88,
+     "text": "Remington Rand",
+     "label": "organization",
+     "score": 0.6469011306762695
+    }
+   ]
+  },
+  {
+   "id": "t15",
+   "text": "El ayuntamiento de Valencia contrató a Telefónica para desplegar fibra óptica en el barrio del Carmen.",
+   "entities": [
+    {
+     "start": 0,
+     "end": 27,
+     "text": "El ayuntamiento de Valencia",
+     "label": "organization",
+     "score": 0.5486540198326111
+    },
+    {
+     "start": 39,
+     "end": 49,
+     "text": "Telefónica",
+     "label": "organization",
+     "score": 0.6714776754379272
+    },
+    {
+     "start": 95,
+     "end": 101,
+     "text": "Carmen",
+     "label": "location",
+     "score": 0.6450498104095459
+    }
+   ]
+  },
+  {
+   "id": "t16",
+   "text": "Redis caches the sessions, RabbitMQ queues the jobs and Grafana draws the dashboards in Berlín.",
+   "entities": [
+    {
+     "start": 0,
+     "end": 5,
+     "text": "Redis",
+     "label": "software tool",
+     "score": 0.722686231136322
+    },
+    {
+     "start": 27,
+     "end": 35,
+     "text": "RabbitMQ",
+     "label": "software tool",
+     "score": 0.7253694534301758
+    },
+    {
+     "start": 56,
+     "end": 63,
+     "text": "Grafana",
+     "label": "software tool",
+     "score": 0.8141711950302124
+    }
+   ]
+  },
+  {
+   "id": "t17",
+   "text": "Frida Kahlo pintó en Coyoacán; su casa azul es hoy un museo gestionado por una fundación privada.",
+   "entities": [
+    {
+     "start": 0,
+     "end": 11,
+     "text": "Frida Kahlo",
+     "label": "person",
+     "score": 0.6307898759841919
+    },
+    {
+     "start": 21,
+     "end": 29,
+     "text": "Coyoacán",
+     "label": "location",
+     "score": 0.6634827256202698
+    }
+   ]
+  },
+  {
+   "id": "t18",
+   "text": "The team replaced Elasticsearch with OpenSearch after Amazon forked the project in 2021.",
+   "entities": [
+    {
+     "start": 18,
+     "end": 31,
+     "text": "Elasticsearch",
+     "label": "software tool",
+     "score": 0.5785278677940369
+    },
+    {
+     "start": 37,
+     "end": 47,
+     "text": "OpenSearch",
+     "label": "software tool",
+     "score": 0.5958947539329529
+    },
+    {
+     "start": 54,
+     "end": 60,
+     "text": "Amazon",
+     "label": "organization",
+     "score": 0.6422414779663086
+    }
+   ]
+  },
+  {
+   "id": "t19",
+   "text": "En Barcelona, el Barcelona Supercomputing Center entrena modelos como MarIA para el español.",
+   "entities": [
+    {
+     "start": 3,
+     "end": 12,
+     "text": "Barcelona",
+     "label": "location",
+     "score": 0.5653595924377441
+    },
+    {
+     "start": 17,
+     "end": 48,
+     "text": "Barcelona Supercomputing Center",
+     "label": "organization",
+     "score": 0.6586939692497253
+    },
+    {
+     "start": 70,
+     "end": 75,
+     "text": "MarIA",
+     "label": "machine learning model",
+     "score": 0.6260011196136475
+    }
+   ]
+  },
+  {
+   "id": "t20",
+   "text": "Tim Berners-Lee proposed the World Wide Web at CERN, near Geneva, and later founded the W3C.",
+   "entities": [
+    {
+     "start": 0,
+     "end": 15,
+     "text": "Tim Berners-Lee",
+     "label": "person",
+     "score": 0.6955849528312683
+    },
+    {
+     "start": 47,
+     "end": 51,
+     "text": "CERN",
+     "label": "organization",
+     "score": 0.7036584615707397
+    },
+    {
+     "start": 58,
+     "end": 64,
+     "text": "Geneva",
+     "label": "location",
+     "score": 0.6336414217948914
+    },
+    {
+     "start": 88,
+     "end": 91,
+     "text": "W3C",
+     "label": "organization",
+     "score": 0.745682418346405
+    }
+   ]
+  },
+  {
+   "id": "t21",
+   "text": "La startup de Sevilla usa FastAPI, SQLAlchemy y Celery; su director técnico es Lucía Fernández.",
+   "entities": [
+    {
+     "start": 14,
+     "end": 21,
+     "text": "Sevilla",
+     "label": "location",
+     "score": 0.5967318415641785
+    },
+    {
+     "start": 26,
+     "end": 33,
+     "text": "FastAPI",
+     "label": "software tool",
+     "score": 0.6482933759689331
+    },
+    {
+     "start": 35,
+     "end": 45,
+     "text": "SQLAlchemy",
+     "label": "software tool",
+     "score": 0.6833944320678711
+    },
+    {
+     "start": 48,
+     "end": 54,
+     "text": "Celery",
+     "label": "software tool",
+     "score": 0.7445111870765686
+    },
+    {
+     "start": 79,
+     "end": 94,
+     "text": "Lucía Fernández",
+     "label": "person",
+     "score": 0.6869475841522217
+    }
+   ]
+  },
+  {
+   "id": "t22",
+   "text": "Wikipedia runs on MediaWiki, written in PHP, and is supported by the Wikimedia Foundation.",
+   "entities": [
+    {
+     "start": 0,
+     "end": 9,
+     "text": "Wikipedia",
+     "label": "organization",
+     "score": 0.5711020827293396
+    },
+    {
+     "start": 18,
+     "end": 27,
+     "text": "MediaWiki",
+     "label": "software library",
+     "score": 0.7005496025085449
+    },
+    {
+     "start": 69,
+     "end": 89,
+     "text": "Wikimedia Foundation",
+     "label": "organization",
+     "score": 0.7396701574325562
+    }
+   ]
+  },
+  {
+   "id": "t23",
+   "text": "Isaac Newton estudió en Cambridge y presidió la Royal Society durante más de veinte años.",
+   "entities": [
+    {
+     "start": 0,
+     "end": 12,
+     "text": "Isaac Newton",
+     "label": "person",
+     "score": 0.696888267993927
+    },
+    {
+     "start": 24,
+     "end": 33,
+     "text": "Cambridge",
+     "label": "location",
+     "score": 0.644054651260376
+    },
+    {
+     "start": 48,
+     "end": 61,
+     "text": "Royal Society",
+     "label": "organization",
+     "score": 0.7229752540588379
+    }
+   ]
+  },
+  {
+   "id": "t24",
+   "text": "The robot uses ROS 2 over DDS, a YOLO model for vision and an NVIDIA Jetson board in Tokyo 🤖.",
+   "entities": [
+    {
+     "start": 15,
+     "end": 20,
+     "text": "ROS 2",
+     "label": "software tool",
+     "score": 0.5947490930557251
+    },
+    {
+     "start": 26,
+     "end": 29,
+     "text": "DDS",
+     "label": "protocol or standard",
+     "score": 0.5558493733406067
+    },
+    {
+     "start": 33,
+     "end": 43,
+     "text": "YOLO model",
+     "label": "machine learning model",
+     "score": 0.7621176242828369
+    },
+    {
+     "start": 85,
+     "end": 90,
+     "text": "Tokyo",
+     "label": "location",
+     "score": 0.5996034145355225
+    }
+   ]
+  }
+ ]
+}

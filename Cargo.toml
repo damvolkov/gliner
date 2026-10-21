@@ -1,0 +1,64 @@
+[package]
+name = "gliner"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.94"
+description = "GLiNER bi-encoder inference service: zero-shot named entities over HTTP, CPU-first, on ONNX Runtime"
+license = "MIT"
+repository = "https://github.com/damvolkov/gliner"
+publish = false
+
+[features]
+cuda = ["ort/cuda"]
+
+[dependencies]
+axum = "0.8.9"
+bytes = "1.12.1"
+clap = { version = "4.6.7", features = ["derive"] }
+figment = { version = "0.10.19", features = ["toml", "env"] }
+futures-util = "0.3.34"
+lru = "0.19.0"
+memchr = "2.8.3"
+ndarray = "0.17.2"
+nix = { version = "0.31.3", default-features = false, features = ["signal"] }
+ort = { version = "=2.0.0-rc.15", default-features = false, features = ["std", "ndarray", "tracing", "download-binaries", "copy-dylibs", "api-31", "tls-rustls"] }
+regex = "1.13.1"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+sha2 = "0.10.9"
+tempfile = "3.27.0"
+thiserror = "2.0.21"
+tokenizers = { version = "0.23.2", default-features = false, features = ["onig"] }
+tokio = { version = "1.54.0", features = ["rt-multi-thread", "macros", "net", "signal", "sync", "fs", "io-util", "process"] }
+tokio-util = { version = "0.7.20", features = ["codec", "io"] }
+tracing = "0.1.44"
+tracing-appender = "0.2.5"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json"] }
+
+[dev-dependencies]
+serde_json = "1.0.154"
+figment = { version = "0.10.19", features = ["test", "toml", "env"] }
+http-body-util = "0.1.5"
+tokio = { version = "1.54.0", features = ["rt-multi-thread", "macros", "net", "signal", "sync", "io-util", "time"] }
+tower = { version = "0.5.3", features = ["util"] }
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_debug_implementations = "warn"
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"
+unreachable = "deny"
+indexing_slicing = "deny"
+arithmetic_side_effects = "deny"
+self_named_module_files = "deny"
+single_match_else = "allow"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

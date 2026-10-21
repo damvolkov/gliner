@@ -1,0 +1,15 @@
+{
+  "model": "tiny",
+  "revision": "tiny",
+  "opset": 19,
+  "versions": {
+    "onnx": "1.23.2"
+  },
+  "files": {
+    "text.onnx": "135017dc6a54f0231e0e93544ed22ae2802b23d40e0d613aff1e95d4fa73fa3a",
+    "labels.onnx": "d9bc1c4edbeaeb9e9de9d8b5c9b8c6d9d2b99f4e61a15b50ff849f4d50adfee5",
+    "tokenizer.json": "9ceb856ab83de3e70f1a98742b65b6d12afd4f91bb233fcd126c3a042d25cfe1",
+    "labels.tokenizer.json": "9ceb856ab83de3e70f1a98742b65b6d12afd4f91bb233fcd126c3a042d25cfe1",
+    "config.json": "96369d108d6209bd56c94f78d9c4ca51169662bb350d6b18473e225882f89aec"
+  }
+}

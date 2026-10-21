@@ -1,0 +1,4 @@
+# Normalize line endings so byte-level fixtures (and their sha256s in manifest.json) are identical on every OS.
+* text=auto eol=lf
+*.onnx binary
+tests/resources/tiny/*.json text eol=lf -diff

@@ -1,0 +1,72 @@
+# syntax=docker/dockerfile:1.7
+# The gliner train role (:5800): the serve image's binary plus the Python tools (tools/train, tools/export) in
+# uv environments, train.enabled on. Build context is the repository root: `make image-train`.
+# PyTorch is CPU by default; TORCH=cu128 (any download.pytorch.org/whl index) swaps tools/train's for a CUDA build,
+# whose runtime ships in the wheels: the host needs only the NVIDIA driver and `docker run --gpus all`.
+# Mount the model registry read-write at /models and the data dir at /data (datasets, evals, Hugging Face cache).
+
+##### BASES #####
+ARG CHEF=lukemathwalker/cargo-chef:latest-rust-1.94-slim-trixie@sha256:c099c03e8a585e114631935ceb8bc7dbbfcfeed19e336feb305c9ef389030f72
+ARG UV=ghcr.io/astral-sh/uv:0.12.15@sha256:62f8c047d0a0e9ece6b53fc63df902585a67a47a7f318ddec4a37db586edc8e3
+ARG RUNTIME=debian:trixie-slim@sha256:62bd423aeee912639ca8ee681c2b762cb3e25137e0a92b20be455898a9f034ad
+
+##### TOOLCHAIN #####
+# The same build as docker/Dockerfile: one binary, two roles.
+FROM ${CHEF} AS chef
+WORKDIR /src
+ENV CARGO_TARGET_DIR=/src/target
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends g++ \
+ && rm -rf /var/lib/apt/lists/*
+
+##### RECIPE #####
+FROM chef AS planner
+COPY . .
+RUN cargo chef prepare --recipe-path recipe.json
+
+##### BUILD #####
+FROM chef AS builder
+COPY --from=planner /src/recipe.json recipe.json
+RUN cargo chef cook --release --locked --recipe-path recipe.json
+COPY . .
+RUN cargo build --release --locked --bin gliner \
+ && install -D target/release/gliner /out/gliner
+
+##### UV #####
+FROM ${UV} AS uv
+
+##### RUNTIME #####
+# Both environments are synced in one layer with the cache on the same filesystem, so the packages they share
+# (PyTorch, transformers, gliner) are hard links to one copy; the cache is dropped in the same layer.
+FROM ${RUNTIME}
+ARG TORCH=cpu
+ENV UV_PYTHON_INSTALL_DIR=/opt/python \
+    UV_PYTHON_PREFERENCE=only-managed \
+    UV_CACHE_DIR=/opt/uv-cache \
+    UV_LINK_MODE=hardlink \
+    UV_COMPILE_BYTECODE=1
+COPY --from=uv /uv /usr/local/bin/uv
+WORKDIR /opt/gliner
+COPY tools/train/pyproject.toml tools/train/uv.lock tools/train/train.py tools/train/
+COPY tools/export/pyproject.toml tools/export/uv.lock tools/export/export.py tools/export/parity.py tools/export/
+RUN uv sync --frozen --no-dev --project tools/train \
+ && uv sync --frozen --no-dev --project tools/export \
+ && if [ "${TORCH}" != cpu ]; then \
+      version="$(uv pip show --python tools/train/.venv/bin/python torch | sed -n 's/^Version: \([^+]*\).*/\1/p')" \
+      && uv pip install --python tools/train/.venv/bin/python --reinstall \
+           --index-url "https://download.pytorch.org/whl/${TORCH}" "torch==${version}"; \
+    fi \
+ && rm -rf /opt/uv-cache
+COPY --from=builder /out/gliner /usr/local/bin/gliner
+ENV GLINER_MODEL__DIR=/models \
+    GLINER_TRAIN__ENABLED=true \
+    GLINER_TRAIN__DATA=/data \
+    GLINER_TRAIN__TRAINER='["/opt/gliner/tools/train/.venv/bin/python", "/opt/gliner/tools/train/train.py"]' \
+    GLINER_TRAIN__EXPORTER='["/opt/gliner/tools/export/.venv/bin/python", "/opt/gliner/tools/export/export.py"]' \
+    GLINER_TRAIN__REFERENCE='["/opt/gliner/tools/export/.venv/bin/python", "/opt/gliner/tools/export/parity.py"]' \
+    GLINER_SERVER__LOG__FORMAT=json \
+    HF_HOME=/data/hf
+USER 65532:65532
+EXPOSE 5800
+ENTRYPOINT ["/usr/local/bin/gliner"]
+CMD ["serve"]

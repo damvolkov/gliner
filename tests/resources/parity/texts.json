@@ -1,0 +1,98 @@
+[
+ {
+  "id": "t01",
+  "text": "Marie Curie nació en Varsovia y trabajó en la Universidad de París, donde ganó dos premios Nobel."
+ },
+ {
+  "id": "t02",
+  "text": "El equipo despliega PostgreSQL detrás de Nginx en un clúster de Kubernetes alojado en Frankfurt."
+ },
+ {
+  "id": "t03",
+  "text": "Ada Lovelace wrote the first algorithm intended for Charles Babbage's Analytical Engine in London."
+ },
+ {
+  "id": "t04",
+  "text": "La biblioteca NumPy y la herramienta Docker aparecen en casi todos los proyectos de Python del grupo."
+ },
+ {
+  "id": "t05",
+  "text": "Mistral AI publicó un modelo de lenguaje en París; Hugging Face lo distribuye bajo licencia Apache 2.0."
+ },
+ {
+  "id": "t06",
+  "text": "The service speaks HTTP/2 and gRPC, stores blobs in Amazon S3 and sends alerts through Slack."
+ },
+ {
+  "id": "t07",
+  "text": "José Saramago vivió en Lanzarote 🌋 durante sus últimos años y escribió allí varios ensayos."
+ },
+ {
+  "id": "t08",
+  "text": "Según la Organización Mundial de la Salud, la campaña llegará a Bogotá, Lima y Quito en marzo."
+ },
+ {
+  "id": "t09",
+  "text": "Linus Torvalds created Linux at the University of Helsinki and later started Git for the kernel team."
+ },
+ {
+  "id": "t10",
+  "text": "El protocolo OAuth 2.0 y el estándar JSON Web Token protegen la API pública de la empresa."
+ },
+ {
+  "id": "t11",
+  "text": "Gabriel García Márquez recibió el premio en Estocolmo y regresó después a Ciudad de México."
+ },
+ {
+  "id": "t12",
+  "text": "We fine-tuned BERT with PyTorch on a single GPU, then served it with ONNX Runtime on Ubuntu."
+ },
+ {
+  "id": "t13",
+  "text": "La Agencia Espacial Europea lanzó el satélite desde Kourou con un cohete Ariane 6 🚀."
+ },
+ {
+  "id": "t14",
+  "text": "Grace Hopper worked for the United States Navy and helped design COBOL at Remington Rand."
+ },
+ {
+  "id": "t15",
+  "text": "El ayuntamiento de Valencia contrató a Telefónica para desplegar fibra óptica en el barrio del Carmen."
+ },
+ {
+  "id": "t16",
+  "text": "Redis caches the sessions, RabbitMQ queues the jobs and Grafana draws the dashboards in Berlín."
+ },
+ {
+  "id": "t17",
+  "text": "Frida Kahlo pintó en Coyoacán; su casa azul es hoy un museo gestionado por una fundación privada."
+ },
+ {
+  "id": "t18",
+  "text": "The team replaced Elasticsearch with OpenSearch after Amazon forked the project in 2021."
+ },
+ {
+  "id": "t19",
+  "text": "En Barcelona, el Barcelona Supercomputing Center entrena modelos como MarIA para el español."
+ },
+ {
+  "id": "t20",
+  "text": "Tim Berners-Lee proposed the World Wide Web at CERN, near Geneva, and later founded the W3C."
+ },
+ {
+  "id": "t21",
+  "text": "La startup de Sevilla usa FastAPI, SQLAlchemy y Celery; su director técnico es Lucía Fernández."
+ },
+ {
+  "id": "t22",
+  "text": "Wikipedia runs on MediaWiki, written in PHP, and is supported by the Wikimedia Foundation."
+ },
+ {
+  "id": "t23",
+  "text": "Isaac Newton estudió en Cambridge y presidió la Royal Society durante más de veinte años."
+ },
+ {
+  "id": "t24",
+  "text": "The robot uses ROS 2 over DDS, a YOLO model for vision and an NVIDIA Jetson board in Tokyo 🤖."
+ }
+]

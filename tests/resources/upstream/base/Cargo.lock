@@ -1,0 +1,21 @@
+version = 4
+
+[[package]]
+name = "gliner"
+version = "0.1.0"
+
+[[package]]
+name = "ort"
+version = "2.0.0-rc.15"
+
+[[package]]
+name = "tokenizers"
+version = "0.23.2"
+
+[[package]]
+name = "syn"
+version = "1.0.109"
+
+[[package]]
+name = "syn"
+version = "2.0.100"

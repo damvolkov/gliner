@@ -1,0 +1,32 @@
+[project]
+name = "gliner-train"
+version = "0.1.0"
+description = "Fine-tune a GLiNER bi-encoder checkpoint on an NDJSON dataset, for the service's train role"
+requires-python = ">=3.13"
+dependencies = [
+    "gliner[training]==0.2.29",
+    "torch>=2.9",
+    "transformers>=5.16.1",
+]
+
+[dependency-groups]
+dev = ["ruff>=0.14"]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "PL", "PERF"]
+ignore = ["PLR2004"]
