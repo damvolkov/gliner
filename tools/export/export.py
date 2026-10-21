@@ -2,7 +2,8 @@
 
 model dir = text.onnx (text encoder + span scorer, label embeddings as an input), labels.onnx (label encoder,
 mean-pooled and projected), tokenizer.json (text), labels.tokenizer.json (labels), config.json (the gliner config
-subset the runtime reads), manifest.json (model id, revision, versions, sha256 of every file).
+subset the runtime reads), manifest.json (model id, revision, versions, sha256 of every file). The checkpoint is a
+Hugging Face id or a local dir (a trained version's checkpoint/, exported under --name).
 """
 
 import argparse
@@ -40,8 +41,9 @@ class LabelsExport(nn.Module):
 class ArtifactExport:
     """One checkpoint exported, verified against PyTorch and fingerprinted into a model dir."""
 
-    def __init__(self, model_id: str, out: Path) -> None:
+    def __init__(self, model_id: str, out: Path, name: str | None = None) -> None:
         self._id = model_id
+        self._name = name or model_id
         self._out = out
         self._model = GLiNER.from_pretrained(model_id)
         self._model.model.to("cpu").eval()
@@ -113,9 +115,11 @@ class ArtifactExport:
             return hashlib.file_digest(file, "sha256").hexdigest()
 
     def _run_manifest(self, gap: float) -> None:
+        ### A local checkpoint (a trained version) has no hub revision.
+        revision = None if Path(self._id).is_dir() else HfApi().model_info(self._id).sha
         manifest = {
-            "model": self._id,
-            "revision": HfApi().model_info(self._id).sha,
+            "model": self._name,
+            "revision": revision,
             "opset": OPSET,
             "labels_gap": gap,
             "versions": {package: version(package) for package in PACKAGES},
@@ -137,7 +141,8 @@ class ArtifactExport:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("model", help="Hugging Face id of a GLiNER bi-encoder checkpoint")
+    parser.add_argument("model", help="Hugging Face id or local dir of a GLiNER bi-encoder checkpoint")
     parser.add_argument("--out", type=Path, required=True, help="model dir to write")
+    parser.add_argument("--name", help="model id the manifest records (default: the model argument)")
     arguments = parser.parse_args()
-    ArtifactExport(arguments.model, arguments.out).run()
+    ArtifactExport(arguments.model, arguments.out, arguments.name).run()
