@@ -1,0 +1,22 @@
+# Optional CI/CD gates and settings — GitHub Actions *variables*
+# (Settings → Secrets and variables → Actions → Variables).
+# Every one ships inert: a gate is `false`, a setting empty. `make gates` (part of `make check`) fails when a
+# workflow reads an undeclared variable or one here ships with a value other than false/empty.
+#
+# Enable:  gh variable set NAME --body true      (a setting: --body <value>)
+# Disable: gh variable delete NAME
+#
+# Always on (no gate): ci.yml (prek hooks, coverage, image build) and health.yml (monthly dependency health
+# issue, this repository only). Renovate acts once its GitHub App is installed on the repository.
+
+##### GATES #####
+DOCS_DEPLOY=false          # docs.yml publishes the site to GitHub Pages from main (Settings → Pages → Source: GitHub Actions)
+PUBLISH_IMAGE=false        # release.yml pushes ghcr.io/<owner>/gliner :X.Y.Z, :X.Y and :latest
+RENOVATE_SYNC=false        # sync.yml commits changelog + THIRD_PARTY_LICENSES.md on renovate/* branches (needs the App below)
+MAINTENANCE_AGENT=false    # maintenance.yml lets the agent repair renovate/* branches whose CI failed (needs the App and QWEN_API_KEY)
+
+##### SETTINGS #####
+APP_CLIENT_ID=             # GitHub App that commits for sync/maintenance (contents, pull requests, issues: write); secret APP_PRIVATE_KEY
+QWEN_BASE_URL=             # maintenance agent endpoint (OpenAI-compatible); empty = the action's default; secret QWEN_API_KEY
+QWEN_MODEL=                # maintenance agent model; empty = qwen3.8-max
+QWEN_CLI_VERSION=          # qwen-code CLI version; empty = latest

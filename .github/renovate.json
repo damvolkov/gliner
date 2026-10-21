@@ -1,0 +1,102 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard"
+  ],
+  "enabledManagers": [
+    "cargo",
+    "pep621",
+    "github-actions",
+    "dockerfile"
+  ],
+  "schedule": [
+    "before 6am on monday"
+  ],
+  "timezone": "Europe/Madrid",
+  "prConcurrentLimit": 3,
+  "abandonmentThreshold": "1 year",
+  "rangeStrategy": "bump",
+  "lockFileMaintenance": {
+    "enabled": false
+  },
+  "packageRules": [
+    {
+      "description": "The inference engine: one PR per release, at once; changelog and licenses by sync.yml, repairs by maintenance.yml, parity re-checked by hand (make backends).",
+      "matchManagers": [
+        "cargo"
+      ],
+      "matchPackageNames": [
+        "ort",
+        "tokenizers"
+      ],
+      "schedule": [
+        "at any time"
+      ],
+      "labels": [
+        "engine-update"
+      ],
+      "commitMessagePrefix": "engine:",
+      "automerge": false
+    },
+    {
+      "description": "The rest of the Rust tree: one weekly PR.",
+      "matchManagers": [
+        "cargo"
+      ],
+      "matchPackageNames": [
+        "!ort",
+        "!tokenizers"
+      ],
+      "groupName": "rust dependencies",
+      "labels": [
+        "dependencies"
+      ]
+    },
+    {
+      "description": "The export tool (PyTorch, gliner): one weekly PR; a gliner bump means re-exporting and re-checking parity.",
+      "matchManagers": [
+        "pep621"
+      ],
+      "groupName": "export tooling",
+      "labels": [
+        "tooling"
+      ]
+    },
+    {
+      "description": "requires-python is a support promise, not a dependency: never bumped by a bot.",
+      "matchDepTypes": [
+        "requires-python"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Build and runtime images stay pinned by digest; one monthly PR.",
+      "matchManagers": [
+        "dockerfile"
+      ],
+      "groupName": "docker images",
+      "pinDigests": true,
+      "schedule": [
+        "before 6am on the first day of the month"
+      ],
+      "labels": [
+        "tooling"
+      ]
+    },
+    {
+      "description": "Workflow actions stay pinned by digest; one monthly PR.",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "groupName": "github actions",
+      "pinDigests": true,
+      "schedule": [
+        "before 6am on the first day of the month"
+      ],
+      "labels": [
+        "tooling"
+      ]
+    }
+  ]
+}
