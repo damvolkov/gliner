@@ -11,6 +11,7 @@
 
 mod bench;
 mod parity;
+mod smoke;
 
 use std::path::PathBuf;
 

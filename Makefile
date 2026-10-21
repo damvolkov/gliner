@@ -14,7 +14,7 @@ IMAGE ?= gliner:latest
 PORT ?= 5800
 EXPORT = uv run -q --project tools/export python
 ARGS = $(filter-out $(firstword $(MAKECMDGOALS)),$(MAKECMDGOALS))
-.PHONY: help install toolchain tools hooks export fixture tiny serve build fmt lint bounds test backends bench coverage licenses health gates check image up down release docs docs-serve
+.PHONY: help install toolchain tools hooks export fixture tiny serve build fmt lint bounds test backends bench smoke coverage licenses health gates check image up down release docs docs-serve
 
 help:  ## list targets
 	@awk 'BEGIN{FS=":.*##"} /^[a-z][a-zA-Z0-9_-]*:.*##/{printf "  \033[32m%-10s\033[0m %s\n",$$1,$$2}' $(MAKEFILE_LIST)
@@ -73,6 +73,9 @@ backends:  ## model-backed tests: parity with PyTorch on the exported model (mak
 
 bench:  ## ms per text and peak RSS on the exported model [GLINER_MODEL__THREADS=n]
 	@cargo test --locked --release --test model -- --ignored --nocapture bench $(ARGS)
+
+smoke:  ## one real epoch on CPU through the whole train job, on a scratch registry (make export first; needs uv)
+	@cargo test --locked --release --test model -- --ignored --nocapture smoke $(ARGS)
 
 coverage:  ## line coverage of the model-free tests; fails under $(COVERAGE)%
 	@cargo llvm-cov --locked --quiet --ignore-filename-regex 'src/main\.rs' --fail-under-lines $(COVERAGE) --summary-only

@@ -102,7 +102,7 @@ impl TrainJob {
 
     fn common_step(&self, step: StepTrain) {
         self.lab.board.update(self.id, |job| job.step = step);
-        self.common_log(format!("step {}", json!(step)));
+        self.common_log(format!("step {}", json!(step).as_str().unwrap_or_default()));
     }
 
     async fn common_write(path: &Path, bytes: Vec<u8>) -> Result<(), JobError> {
@@ -383,7 +383,7 @@ impl TrainJob {
         };
         // ### Absent when the job never reached training: nothing to clean.
         let _ = tokio::fs::remove_dir_all(&self.staging).await;
-        self.common_log(format!("{}", json!(state)));
+        self.common_log(json!(state).as_str().unwrap_or_default().to_owned());
         self.lab.board.finish(self.id, state, error, Self::common_now());
     }
 
