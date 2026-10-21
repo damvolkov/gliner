@@ -51,16 +51,15 @@ impl Example {
         Sha256::digest(normalized.as_bytes()).into()
     }
 
-    /// Per eval set, its texts that are also dataset texts (sets without any left out).
+    /// Per eval set, its texts whose fingerprint is among a dataset's (sets without any left out).
     #[must_use]
-    pub fn leaks(dataset: &[LineDataset], evals: &BTreeMap<String, Vec<LineDataset>>) -> BTreeMap<String, usize> {
-        let seen: HashSet<[u8; 32]> = dataset.iter().map(|line| Self::fingerprint(&line.text)).collect();
+    pub fn leaks(dataset: &HashSet<[u8; 32]>, evals: &BTreeMap<String, Vec<LineDataset>>) -> BTreeMap<String, usize> {
         evals
             .iter()
             .map(|(name, lines)| {
                 let shared = lines
                     .iter()
-                    .filter(|line| seen.contains(&Self::fingerprint(&line.text)))
+                    .filter(|line| dataset.contains(&Self::fingerprint(&line.text)))
                     .count();
                 (name.clone(), shared)
             })
@@ -71,7 +70,7 @@ impl Example {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::BTreeMap;
+    use std::collections::{BTreeMap, HashSet};
 
     use crate::core::example::Example;
     use crate::schema::dataset::{LineDataset, SpanDataset};
@@ -150,7 +149,10 @@ mod tests {
 
     #[test]
     fn test_leaks_counts_shared_texts_per_set() {
-        let dataset = [line("Ana vive en Málaga"), line("Eva  VIVE en Roma"), line("nadie")];
+        let dataset: HashSet<[u8; 32]> = ["Ana vive en Málaga", "Eva  VIVE en Roma", "nadie"]
+            .into_iter()
+            .map(Example::fingerprint)
+            .collect();
         let evals = BTreeMap::from([
             ("a".to_owned(), vec![line("eva vive en roma"), line("otra")]),
             ("b".to_owned(), vec![line("otra más")]),

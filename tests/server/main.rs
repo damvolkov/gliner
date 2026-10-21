@@ -59,7 +59,9 @@ async fn http(port: u16, method: &str, path: &str, body: &str) -> Option<(u16, V
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn test_serve_loads_answers_and_stops_on_sigterm() {
     let registry = registry();
-    let settings = settings(registry.path(), 2).await;
+    let mut settings = settings(registry.path(), 2).await;
+    settings.train.enabled = true;
+    settings.train.data = registry.path().join("train");
     let port = settings.server.port;
     let server = tokio::spawn(async move { HttpServer::serve(&settings).await });
     let ready = async {
@@ -75,6 +77,8 @@ async fn test_serve_loads_answers_and_stops_on_sigterm() {
         .await
         .unwrap();
     assert_eq!((status, &body["entities"][0]["text"]), (200, &json!("Ana")));
+    assert_eq!(http(port, "GET", "/evals", "").await.unwrap(), (200, json!([])));
+    assert!(registry.path().join("train/datasets").is_dir());
     std::process::Command::new("kill")
         .args(["-TERM", &std::process::id().to_string()])
         .status()

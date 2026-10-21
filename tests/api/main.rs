@@ -10,6 +10,9 @@
 
 mod app;
 mod batch;
+mod data;
+mod eval;
 mod fake;
 mod health;
 mod ner;
+mod promote;

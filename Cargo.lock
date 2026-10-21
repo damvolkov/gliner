@@ -603,6 +603,7 @@ dependencies = [
  "futures-util",
  "http-body-util",
  "lru",
+ "memchr",
  "ndarray",
  "ort",
  "regex",

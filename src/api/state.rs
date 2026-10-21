@@ -6,11 +6,12 @@ use crate::api::error::ApiError;
 use crate::core::query::Query;
 use crate::core::settings::Settings;
 use crate::runtime::executor::{ServedExecutor, SlotExecutor};
+use crate::runtime::lab::TrainLab;
 use crate::schema::error::RequestError;
 
 /// Shared by every request: the served model once loaded (empty until then, so `/ready` and the prediction routes
 /// answer 503 meanwhile; swapped whole on promote), the default query, `/ner/batch` limits, and the shutdown
-/// signal every stream obeys.
+/// signal every stream obeys; the train role when `train.enabled` (its routes answer 501 without it).
 #[derive(Debug, Clone)]
 pub struct AppState {
     pub slot: Arc<SlotExecutor>,
@@ -18,6 +19,7 @@ pub struct AppState {
     pub concurrency: usize,
     pub line: usize,
     pub shutdown: CancellationToken,
+    pub lab: Option<Arc<TrainLab>>,
 }
 
 impl AppState {
@@ -33,6 +35,7 @@ impl AppState {
             concurrency: settings.model.concurrency,
             line: settings.server.line,
             shutdown: CancellationToken::new(),
+            lab: None,
         })
     }
 
@@ -42,5 +45,11 @@ impl AppState {
     /// The model is not loaded yet.
     pub fn ready(&self) -> Result<ServedExecutor, ApiError> {
         self.slot.get().ok_or(ApiError::NotReady)
+    }
+
+    /// # Errors
+    /// The train role is off.
+    pub fn lab(&self) -> Result<Arc<TrainLab>, ApiError> {
+        self.lab.clone().ok_or(ApiError::Disabled)
     }
 }

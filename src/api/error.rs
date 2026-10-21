@@ -4,6 +4,9 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use serde_json::json;
 
+use crate::runtime::lab::LabError;
+use crate::runtime::registry::RegistryError;
+use crate::runtime::store::StoreError;
 use crate::schema::error::{RecognizerError, RequestError};
 
 /// Every failure a handler returns, as `{"error": "..."}` with its status.
@@ -17,6 +20,32 @@ pub enum ApiError {
     Request(#[from] RequestError),
     #[error(transparent)]
     Recognizer(#[from] RecognizerError),
+    #[error("training is disabled: train.enabled = true turns it on (the gliner-train image does)")]
+    Disabled,
+    #[error(transparent)]
+    Lab(#[from] LabError),
+}
+
+impl ApiError {
+    // ##### PRIVATE #####
+
+    const fn into_lab_status(error: &LabError) -> StatusCode {
+        match error {
+            LabError::Registry(RegistryError::Unknown(_)) | LabError::Store(StoreError::Missing { .. }) => {
+                StatusCode::NOT_FOUND
+            }
+            LabError::Store(
+                StoreError::Name(_) | StoreError::Line { .. } | StoreError::Long { .. } | StoreError::Empty,
+            )
+            | LabError::Unlabelled(_) => StatusCode::UNPROCESSABLE_ENTITY,
+            LabError::Store(StoreError::Body(_)) => StatusCode::BAD_REQUEST,
+            LabError::NotReady => StatusCode::SERVICE_UNAVAILABLE,
+            LabError::Registry(_)
+            | LabError::Store(StoreError::Io { .. })
+            | LabError::Load { .. }
+            | LabError::Recognizer(_) => StatusCode::INTERNAL_SERVER_ERROR,
+        }
+    }
 }
 
 impl IntoResponse for ApiError {
@@ -26,6 +55,8 @@ impl IntoResponse for ApiError {
             Self::Body(rejection) => rejection.status(),
             Self::Request(_) => StatusCode::UNPROCESSABLE_ENTITY,
             Self::Recognizer(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::Disabled => StatusCode::NOT_IMPLEMENTED,
+            Self::Lab(error) => Self::into_lab_status(error),
         };
         (status, Json(json!({ "error": self.to_string() }))).into_response()
     }
