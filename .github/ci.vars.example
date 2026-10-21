@@ -13,6 +13,7 @@
 DOCS_DEPLOY=false          # docs.yml publishes the site to GitHub Pages from main (Settings → Pages → Source: GitHub Actions)
 PUBLISH_IMAGE=false        # release.yml pushes ghcr.io/<owner>/gliner :X.Y.Z, :X.Y and :latest
 RENOVATE_SYNC=false        # sync.yml commits changelog + THIRD_PARTY_LICENSES.md on renovate/* branches (needs the App below)
+TRAIN_IMAGE=false          # ci.yml also builds docker/Dockerfile.train (PyTorch CPU, 2.4 GB) on every push and PR
 MAINTENANCE_AGENT=false    # maintenance.yml lets the agent repair renovate/* branches whose CI failed (needs the App and QWEN_API_KEY)
 
 ##### SETTINGS #####

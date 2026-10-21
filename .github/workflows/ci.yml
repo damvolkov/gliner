@@ -1,5 +1,6 @@
 ##### CI #####
-# Same gate as the local prek hooks, the coverage gate (model-free, so it runs here), and the runtime image build.
+# Same gate as the local prek hooks, the coverage gate (model-free, so it runs here), and the runtime image build;
+# the train image (PyTorch, 2.4 GB) too once TRAIN_IMAGE is on.
 # Logs are kept as an artifact: maintenance.yml hands them to the repair agent on renovate/* branches.
 # Model-backed parity needs an exported model and runs locally (make backends).
 name: ci
@@ -62,3 +63,21 @@ jobs:
           file: docker/Dockerfile
           push: false
           tags: gliner:ci
+
+  train-image:
+    name: train image
+    if: vars.TRAIN_IMAGE == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: docker/Dockerfile.train
+          push: false
+          tags: gliner-train:ci
