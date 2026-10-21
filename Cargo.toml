@@ -20,6 +20,7 @@ futures-util = "0.3.34"
 lru = "0.19.0"
 memchr = "2.8.3"
 ndarray = "0.17.2"
+nix = { version = "0.31.3", default-features = false, features = ["signal"] }
 ort = { version = "=2.0.0-rc.15", default-features = false, features = ["std", "ndarray", "tracing", "download-binaries", "copy-dylibs", "api-31", "tls-rustls"] }
 regex = "1.13.1"
 serde = { version = "1.0.229", features = ["derive"] }
