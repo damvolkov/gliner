@@ -147,7 +147,7 @@ impl TrainJob {
             .is_empty()
             .then_some(())
             .ok_or_else(|| JobError::Leakage(shared.join("; ")))?;
-        self.common_log(format!("{} eval sets, no shared text", evals.len()));
+        self.common_log(format!("eval sets checked: {}, no text shared", evals.len()));
         Ok(evals)
     }
 
