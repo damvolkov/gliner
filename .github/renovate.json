@@ -87,6 +87,16 @@
       "automerge": true
     },
     {
+      "description": "The pytorch-cpu index publishes local versions (2.14.1+cpu), which no PEP 440 range may name: keep the floor, move the lock.",
+      "matchManagers": [
+        "pep621"
+      ],
+      "matchPackageNames": [
+        "torch"
+      ],
+      "rangeStrategy": "update-lockfile"
+    },
+    {
       "description": "requires-python is a support promise, not a dependency: never bumped by a bot.",
       "matchDepTypes": [
         "requires-python"
