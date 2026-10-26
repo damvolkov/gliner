@@ -28,7 +28,7 @@ LIMIT: Final = 1000
 CONCURRENCY: Final = 8
 TIMEOUT: Final = 30
 ABSENT: Final = frozenset({401, 403, 404})
-USER_AGENT: Final = "gliner-models (https://github.com/damvolkov/gliner)"
+USER_AGENT: Final = "gliner-models (https://github.com/edamlabs/gliner)"
 CONTRACT: Final = "bi-encoder, span mode, whitespace words, first sub-token"
 HEADER: Final = (
     "| Model | Created | License | Downloads | Params | Architecture | Served here |",

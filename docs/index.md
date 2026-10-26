@@ -3,6 +3,8 @@
 A GLiNER bi-encoder inference service in Rust: zero-shot named entities over HTTP, CPU-first, on ONNX Runtime, with
 the same predictions as the PyTorch reference.
 
+An **EDamLabs binding**: a port of a third-party model that keeps its upstream's predictions and follows its releases, shipped as a service ([EDamLabs families](https://github.com/edamlabs/esteward#identity)).
+
 ## How it works
 
 A bi-encoder has two towers. The **label tower** (BGE-small for `knowledgator/gliner-bi-base-v2.0`) turns each label

@@ -33,7 +33,7 @@ from typing import Final, NamedTuple, NoReturn
 NAME_RE: Final = re.compile(r"^([A-Za-z0-9][A-Za-z0-9._-]*)")
 GITHUB_RE: Final = re.compile(r"github\.com[/:]([^/]+/[^/#?.]+)")
 TIMEOUT: Final = 60
-USER_AGENT: Final = "gliner-upstream (https://github.com/damvolkov/gliner)"
+USER_AGENT: Final = "gliner-upstream (https://github.com/edamlabs/gliner)"
 UNREACHABLE: Final = (
     OSError,
     ValueError,

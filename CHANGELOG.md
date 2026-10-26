@@ -4,6 +4,29 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+Same model, same API: the project moves to the EDamLabs organisation.
+
+### Changed
+
+- Home: <https://github.com/edamlabs/gliner>, documentation <https://edamlabs.github.io/gliner/>; the old
+  `damvolkov/gliner` URLs redirect. The image moves with the owner: `ghcr.io/edamlabs/gliner` from the next release.
+- Identity declared in `Cargo.toml` (`[package.metadata.edamlabs]`: service, binding).
+- Self-maintenance: routine Renovate updates (the tools' Python stack, images, toolchain, actions, lock files, the
+  agent's CLI pin, Rust patch releases) merge themselves once every required check passes; the engine, the GLiNER
+  library and Rust minor/major updates wait for a human. The agent reads the organisation's provider settings
+  (`SM_*`), its commit gate checks renamed paths and no longer accepts edits under `tests/resources/`.
+- Dependency health moves to esteward, the EDamLabs maintenance engine (daily: PEP 792 status, license changes, OSV
+  advisories, action pins).
+
+### Removed
+
+- `health.yml`, `tools/health.py` and `make health`, covered by esteward.
+
+### Security
+
+- tokio 1.54.1: race condition in `tokio::time::Interval` (RUSTSEC-2026-0384, GHSA-5wjr-9356-4wc8), found by
+  esteward on the migration.
+
 ## [0.1.1] — 2026-10-26
 
 ### Changed
