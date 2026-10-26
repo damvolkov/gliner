@@ -83,7 +83,7 @@ async fn test_smoke_train_one_epoch_through_the_job() {
             break job;
         }
         assert!(
-            started.elapsed() < Duration::from_secs(1800),
+            started.elapsed() < Duration::from_mins(30),
             "still running after 30 min"
         );
         tokio::time::sleep(Duration::from_secs(1)).await;

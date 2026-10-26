@@ -90,7 +90,7 @@ mod tests {
 
     #[test]
     fn test_split_empty_and_blank() {
-        assert!(split("").is_empty());
-        assert!(split(" \n\t ").is_empty());
+        assert_eq!(split(""), []);
+        assert_eq!(split(" \n\t "), []);
     }
 }

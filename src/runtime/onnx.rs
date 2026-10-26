@@ -368,12 +368,7 @@ mod tests {
         let runtime = runtime(None, 2).unwrap();
         let entities = runtime.predict("Ana", &labels(&["location", "person"]), 0.5).unwrap();
         assert_eq!(entities[0].label, "location");
-        assert!(
-            runtime
-                .predict("Ana", &labels(&["person"]), sigmoid(3.0))
-                .unwrap()
-                .is_empty()
-        );
+        assert_eq!(runtime.predict("Ana", &labels(&["person"]), sigmoid(3.0)).unwrap(), []);
     }
 
     #[test]
@@ -388,7 +383,7 @@ mod tests {
     #[test]
     fn test_predict_empty_text_encodes_nothing() {
         let runtime = runtime(Some(4), 1).unwrap();
-        assert!(runtime.predict(" \n", &labels(&["person"]), 0.5).unwrap().is_empty());
+        assert_eq!(runtime.predict(" \n", &labels(&["person"]), 0.5).unwrap(), []);
         assert_eq!(runtime.card().labels_cached, 0);
     }
 

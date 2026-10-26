@@ -3,7 +3,7 @@
 # No model inside and nothing downloaded at run time: mount an artifact dir (`make export`) read-only at /models.
 
 ##### BASES #####
-ARG CHEF=lukemathwalker/cargo-chef:latest-rust-1.94-slim-trixie@sha256:c099c03e8a585e114631935ceb8bc7dbbfcfeed19e336feb305c9ef389030f72
+ARG CHEF=lukemathwalker/cargo-chef:latest-rust-1.99-slim-trixie@sha256:f122e3c240d1c05668b07179cf6fa07647db2a79a110f4bb8a91d75f90d5b8e4
 ARG RUNTIME=gcr.io/distroless/cc-debian13:nonroot@sha256:b7e81cb1af38d9345680e68bcf564d388f96304e25222030fc8c051faf8565b3
 
 ##### TOOLCHAIN #####

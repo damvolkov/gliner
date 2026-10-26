@@ -59,7 +59,7 @@ mod tests {
 
     #[test]
     fn test_plan_degenerate_inputs() {
-        assert!(plan(0, 8, 2).is_empty());
+        assert_eq!(plan(0, 8, 2), []);
         assert_eq!(plan(3, 2, 5), [(0, 2), (1, 3)]);
     }
 }

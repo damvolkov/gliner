@@ -113,7 +113,7 @@ mod tests {
     fn test_select_ties_keep_the_first_candidate() {
         let kept = Span::select(vec![span(0, 1, 1, 0.7), span(0, 1, 0, 0.7)]);
         assert_eq!(kept, [span(0, 1, 1, 0.7)]);
-        assert!(Span::select(Vec::new()).is_empty());
+        assert_eq!(Span::select(Vec::new()), []);
     }
 
     #[test]

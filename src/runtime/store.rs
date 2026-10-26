@@ -320,7 +320,7 @@ mod tests {
         assert_eq!((card.name.as_str(), card.lines), ("news", 2));
         assert_eq!(card.sha256, format!("{:x}", Sha256::digest(stored.as_bytes())));
         assert_eq!(store.card(KindStore::Evals, "news").await.unwrap(), card);
-        assert!(files(&store, KindStore::Datasets).is_empty());
+        assert_eq!(files(&store, KindStore::Datasets), [] as [String; 0]);
     }
 
     #[tokio::test]
@@ -368,7 +368,7 @@ mod tests {
     #[tokio::test]
     async fn test_list_and_read() {
         let (_root, store) = store();
-        assert!(store.list(KindStore::Evals).await.unwrap().is_empty());
+        assert_eq!(store.list(KindStore::Evals).await.unwrap(), []);
         store.put(KindStore::Evals, "b", GOOD.as_bytes()).await.unwrap();
         store.put(KindStore::Evals, "a", GOOD.as_bytes()).await.unwrap();
         store.put(KindStore::Datasets, "c", GOOD.as_bytes()).await.unwrap();
