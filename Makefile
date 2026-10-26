@@ -19,9 +19,9 @@ DATA ?= data/train
 PORT ?= 5800
 EXPORT = uv run -q --project tools/export python
 MAINTAIN = uv run -q --project tools
-SCRIPTS = tools/health.py tools/upstream.py tools/models.py tests/tools
+SCRIPTS = tools/upstream.py tools/models.py tests/tools
 ARGS = $(filter-out $(firstword $(MAKECMDGOALS)),$(MAKECMDGOALS))
-.PHONY: help install toolchain tools hooks export fixture tiny serve build fmt lint bounds test backends bench smoke coverage licenses health models pytest gates check image image-train up down release docs docs-serve
+.PHONY: help install toolchain tools hooks export fixture tiny serve build fmt lint bounds test backends bench smoke coverage licenses models pytest gates check image image-train up down release docs docs-serve
 
 help:  ## list targets
 	@awk 'BEGIN{FS=":.*##"} /^[a-z][a-zA-Z0-9_-]*:.*##/{printf "  \033[32m%-10s\033[0m %s\n",$$1,$$2}' $(MAKEFILE_LIST)
@@ -92,9 +92,6 @@ coverage:  ## line coverage of the model-free tests; fails under $(COVERAGE)%
 
 licenses:  ## regenerate THIRD_PARTY_LICENSES.md from the dependency tree
 	@cargo about generate --locked about.hbs | tr -d "\r" > THIRD_PARTY_LICENSES.md
-
-health:  ## dependency health report (archived, vanished, stale, dormant upstreams) → stdout
-	@uv run -q --no-project python -m tools.health --output /dev/stdout
 
 models:  ## model watch: GLiNER-family models on the Hub newer than the served base (tools/models.toml) → stdout
 	@uv run -q --no-project python -m tools.models --output /dev/stdout

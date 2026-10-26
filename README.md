@@ -14,6 +14,8 @@
 
 ---
 
+An **EDamLabs binding**: a port of a third-party model that keeps its upstream's predictions and follows its releases, shipped as a service ([EDamLabs families](https://github.com/edamlabs/esteward#identity)).
+
 Labels are free text per request; the label tower encodes each once and caches it, the text tower scores every span
 of up to 12 words against them. Offsets are **characters**, not bytes. Served: `knowledgator/gliner-bi-base-v2.0`
 (ModernBERT text encoder, BGE-small label encoder), fp32 — the only precision that keeps PyTorch's predictions.

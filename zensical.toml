@@ -1,10 +1,10 @@
 [project]
 site_name = "gliner"
 site_description = "GLiNER bi-encoder inference service in Rust: zero-shot named entities over HTTP, CPU-first, on ONNX Runtime."
-site_url = "https://damvolkov.github.io/gliner/"
+site_url = "https://edamlabs.github.io/gliner/"
 site_dir = "data/ops/site"
-repo_url = "https://github.com/damvolkov/gliner"
-repo_name = "damvolkov/gliner"
+repo_url = "https://github.com/edamlabs/gliner"
+repo_name = "edamlabs/gliner"
 edit_uri = "edit/main/docs/"
 copyright = "MIT · gliner"
 nav = [
@@ -14,6 +14,7 @@ nav = [
   { "Model" = "model.md" },
   { "Training" = "train.md" },
   { "Development" = "development.md" },
+  { "Decisions" = "decisions.md" },
 ]
 
 [project.theme]

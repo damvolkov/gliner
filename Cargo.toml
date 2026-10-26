@@ -5,8 +5,13 @@ edition = "2024"
 rust-version = "1.94"
 description = "GLiNER bi-encoder inference service: zero-shot named entities over HTTP, CPU-first, on ONNX Runtime"
 license = "MIT"
-repository = "https://github.com/damvolkov/gliner"
+repository = "https://github.com/edamlabs/gliner"
 publish = false
+
+### What this repository is in EDamLabs' taxonomy (https://github.com/edamlabs/esteward#identity).
+[package.metadata.edamlabs]
+kind = "service"
+family = "binding"
 
 [features]
 cuda = ["ort/cuda"]

@@ -6,8 +6,8 @@
 # Enable:  gh variable set NAME --body true      (a setting: --body <value>)
 # Disable: gh variable delete NAME
 #
-# Always on (no gate): ci.yml (prek hooks, coverage, image build; upstream-context on renovate/* PRs), health.yml
-# (monthly dependency health issue) and models.yml (monthly model-watch issue, Hugging Face Hub, no token).
+# Always on (no gate): ci.yml (prek hooks, coverage, image build; upstream-context on renovate/* PRs) and models.yml
+# (monthly model-watch issue, Hugging Face Hub, no token). Dependency health and security: esteward, from outside.
 # Renovate acts once its GitHub App is installed on the repository.
 # One-time setup of the App, Renovate, the agent's key and the labels: docs/development.md#self-maintenance.
 
@@ -16,10 +16,10 @@ DOCS_DEPLOY=false          # docs.yml publishes the site to GitHub Pages from ma
 PUBLISH_IMAGE=false        # release.yml pushes ghcr.io/<owner>/gliner :X.Y.Z and :latest (GITHUB_TOKEN, no secret)
 RENOVATE_SYNC=false        # sync.yml commits lockfiles, changelog + THIRD_PARTY_LICENSES.md on renovate/* branches (needs the App below)
 TRAIN_IMAGE=false          # ci.yml also builds docker/Dockerfile.train (PyTorch CPU, 2.4 GB) on every push and PR
-MAINTENANCE_AGENT=false    # maintenance.yml lets the agent repair (CI red) or expose (new upstream API) on renovate/* branches (needs the App and QWEN_API_KEY)
+MAINTENANCE_AGENT=false    # maintenance.yml lets the agent repair (CI red) or expose (new upstream API) on renovate/* branches (needs the App and SM_API_KEY)
 
 ##### SETTINGS #####
 APP_CLIENT_ID=             # GitHub App that commits for sync/maintenance (contents, pull requests, issues: write); secret APP_PRIVATE_KEY
-QWEN_BASE_URL=             # maintenance agent endpoint (OpenAI-compatible); empty = the action's default; secret QWEN_API_KEY
-QWEN_MODEL=                # maintenance agent model; empty = qwen3.8-max
-QWEN_CLI_VERSION=          # qwen-code CLI version; empty = latest
+SM_BASE_URL=               # maintenance agent endpoint (OpenAI-compatible), set at the EDamLabs organisation level; secret SM_API_KEY
+SM_MODEL=                  # maintenance agent model, set at the organisation level
+QWEN_CLI_VERSION=          # qwen-code CLI version; empty = the pin Renovate bumps in maintenance.yml

@@ -2,7 +2,7 @@
 # After CI on a Renovate branch: repair what the update broke (fix), or adopt what the dependency gained where the
 # contract allows (expose: CI green and upstream-context lists new public API). The agent edits files; this workflow
 # alone commits, after an allowlist gate. Never merges. Stops after MAX_ATTEMPTS commits tagged [maintenance] on the
-# branch. Inert until MAINTENANCE_AGENT is on (.github/ci.vars.example).
+# branch. Inert until MAINTENANCE_AGENT is on (.github/ci.vars.example). Provider: the EDamLabs SM_* settings.
 name: maintenance
 
 on:
@@ -18,7 +18,8 @@ concurrency:
 
 env:
   MAX_ATTEMPTS: 3
-  ALLOWED: ^(src/.*|tests/.*|tools/.*|docs/.*|CHANGELOG\.md|README\.md)$
+  # PCRE (grep -P): tests/resources/ holds the PyTorch parity and evaluation fixtures, never the agent's to move.
+  ALLOWED: ^(src/.*|tests/(?!resources/).*|tools/.*|docs/.*|CHANGELOG\.md|README\.md)$
 
 jobs:
   fix:
@@ -105,10 +106,10 @@ jobs:
         id: qwen
         uses: QwenLM/qwen-code-action@05f81718976f3b7da657422e6e8e4d372b8621d7 # main 2026-08-03
         with:
-          openai_api_key: ${{ secrets.QWEN_API_KEY }}
-          openai_base_url: ${{ vars.QWEN_BASE_URL || 'https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1' }}
-          openai_model: ${{ vars.QWEN_MODEL || 'qwen3.8-max' }}
-          qwen_cli_version: ${{ vars.QWEN_CLI_VERSION || 'latest' }}
+          openai_api_key: ${{ secrets.SM_API_KEY }}
+          openai_base_url: ${{ vars.SM_BASE_URL }}
+          openai_model: ${{ vars.SM_MODEL }}
+          qwen_cli_version: ${{ vars.QWEN_CLI_VERSION || '0.26.1' }}
           prompt: |
             Follow QWEN.md strictly.
             Mode: ${{ steps.gate.outputs.mode }}
@@ -134,7 +135,8 @@ jobs:
         run: |
           rm -rf .ai-context .qwen qwen-artifacts
           git add -A
-          REJECTED=$(git diff --cached --name-only | grep -Ev "$ALLOWED" || true)
+          # --no-renames: a rename lists only its target, so `git mv Cargo.toml docs/x` would pass.
+          REJECTED=$(git diff --cached --name-only --no-renames | grep -Pv "$ALLOWED" || true)
           printf '**maintenance (%s)**\n\n%s\n' "$MODE" "$SUMMARY" > /tmp/body.md
           if [ -n "$REJECTED" ]; then
             printf '%s\n' "$REJECTED" | xargs git reset -q --
