@@ -1,6 +1,6 @@
 [package]
 name = "gliner"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 rust-version = "1.94"
 description = "GLiNER bi-encoder inference service: zero-shot named entities over HTTP, CPU-first, on ONNX Runtime"
