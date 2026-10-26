@@ -1,6 +1,6 @@
 [package]
 name = "gliner"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 rust-version = "1.94"
 description = "GLiNER bi-encoder inference service: zero-shot named entities over HTTP, CPU-first, on ONNX Runtime"
@@ -15,7 +15,7 @@ cuda = ["ort/cuda"]
 axum = "0.8.9"
 bytes = "1.12.1"
 clap = { version = "4.6.7", features = ["derive"] }
-figment = { version = "0.10.19", features = ["toml", "env"] }
+toml = "1.1.8"
 futures-util = "0.3.34"
 lru = "0.19.0"
 memchr = "2.8.3"
@@ -37,7 +37,6 @@ tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json"] }
 
 [dev-dependencies]
 serde_json = "1.0.154"
-figment = { version = "0.10.19", features = ["test", "toml", "env"] }
 http-body-util = "0.1.5"
 tokio = { version = "1.54.0", features = ["rt-multi-thread", "macros", "net", "signal", "sync", "io-util", "time"] }
 tower = { version = "0.5.3", features = ["util"] }

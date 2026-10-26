@@ -235,10 +235,9 @@ mod tests {
     use crate::runtime::toolchain::{CallToolchain, ProcessToolchain, Toolchain, ToolchainError};
     use crate::schema::train::ParamsTrain;
 
-    /// `sh -c script zero args…` started from `/`: figment's `Jail` (the settings tests) moves this process into
-    /// a directory it later deletes, and a shell started there complains about its cwd.
+    /// `sh -c script zero args…`.
     fn toolchain(script: &str, zero: &str) -> ProcessToolchain {
-        let command = ["env", "-C", "/", "sh", "-c", script, zero].map(str::to_owned).to_vec();
+        let command = ["sh", "-c", script, zero].map(str::to_owned).to_vec();
         ProcessToolchain::new(&TrainConfig {
             trainer: command.clone(),
             exporter: command.clone(),
