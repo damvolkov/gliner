@@ -4,6 +4,17 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [0.1.1] — 2026-10-26
+
+### Changed
+
+- Settings load without `figment` (no release since 2024-05-17, flagged by the monthly health check): the file and
+  the `GLINER_<SECTION>__<KEY>` overrides are TOML tables merged and deserialized with `toml` 1.1; an override's value
+  is read as TOML (lists, numbers) or else as a string. Same contract, unknown keys still rejected. The settings tests
+  no longer move the process's working directory, so the toolchain tests drop their `env -C /` workaround.
+
+## [0.1.0] — 2026-10-21
+
 ### Added
 
 - `POST /ner`, streaming `POST /ner/batch` (NDJSON), `GET /health`, `GET /ready`, `GET /models` over a GLiNER
