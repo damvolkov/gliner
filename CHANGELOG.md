@@ -22,6 +22,11 @@ Same model, same API: the project moves to the EDamLabs organisation.
 
 - `health.yml`, `tools/health.py` and `make health`, covered by esteward.
 
+### Security
+
+- tokio 1.54.1: race condition in `tokio::time::Interval` (RUSTSEC-2026-0384, GHSA-5wjr-9356-4wc8), found by
+  esteward on the migration.
+
 ## [0.1.1] — 2026-10-26
 
 ### Changed

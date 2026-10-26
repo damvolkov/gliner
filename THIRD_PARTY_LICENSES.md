@@ -4961,7 +4961,7 @@ SOFTWARE.
 Used by:
 
 - [tokio-util 0.7.20](https://github.com/tokio-rs/tokio)
-- [tokio 1.54.0](https://github.com/tokio-rs/tokio)
+- [tokio 1.54.1](https://github.com/tokio-rs/tokio)
 
 ```text
 MIT License
