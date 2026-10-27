@@ -1,10 +1,3 @@
-<h1 align="center">gliner</h1>
-
-<p align="center">
-  <strong>A GLiNER bi-encoder inference service in Rust: zero-shot named entities over HTTP, CPU-first, on ONNX Runtime,
-  with the same predictions as the PyTorch reference.</strong>
-</p>
-
 <p align="center">
   <a href="https://www.rust-lang.org/"><img src="https://img.shields.io/badge/rust-1.94-orange?logo=rust&logoColor=white" alt="Rust"></a>
   <a href="https://onnxruntime.ai/"><img src="https://img.shields.io/badge/runtime-ONNX%20Runtime%201.31-blue" alt="ONNX Runtime"></a>
@@ -12,7 +5,8 @@
   <a href="https://github.com/j178/prek"><img src="https://img.shields.io/badge/hooks-prek-blueviolet" alt="prek"></a>
 </p>
 
----
+A GLiNER bi-encoder inference service in Rust: zero-shot named entities over HTTP, CPU-first, on ONNX Runtime,
+with the same predictions as the PyTorch reference.
 
 An **EDamLabs binding**: a port of a third-party model that keeps its upstream's predictions and follows its releases, shipped as a service ([EDamLabs families](https://github.com/edamlabs/esteward#identity)).
 
