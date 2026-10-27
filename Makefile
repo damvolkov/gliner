@@ -123,7 +123,7 @@ release:  ## tag v<Cargo.toml version>, open the GitHub release, publish the ima
 	@gh workflow run release.yml
 
 docs:  ## the documentation site into data/ops/site
-	@uvx zensical==$(ZENSICAL_VERSION) build --clean
+	@uvx zensical==$(ZENSICAL_VERSION) build --strict --clean
 
 docs-serve:  ## live documentation preview on :8000
 	@uvx zensical==$(ZENSICAL_VERSION) serve
